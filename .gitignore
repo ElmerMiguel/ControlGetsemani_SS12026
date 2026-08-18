@@ -6,6 +6,8 @@
 
 !.gitignore
 
+!/Especificacion_Fase1/img/*.png
+
 *.aux
 *.log
 *.out
