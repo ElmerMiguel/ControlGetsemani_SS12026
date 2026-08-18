@@ -175,11 +175,17 @@
 	% --- 3. MISIÓN, VISIÓN Y VALORES ---
 	\section{Misión, Visión y Valores}
 	
-	\paragraph{Misión} Administrar con transparencia, fidelidad y orden los recursos financieros y bienes materiales encomendados a la Iglesia Getsemaní, facilitando la rendición de cuentas de cada departamento ante la Junta Directiva y la Asamblea General.
+	\subsection{Misión y Visión de la Iglesia}
+	\paragraph{Misión} Glorificar a Dios y proclamar el evangelio de Jesucristo, dando a conocer las buenas nuevas de salvación, promoviendo la enseñanza bíblica, la comunión, la oración y el servicio cristiano.
+	
+	\paragraph{Visión} Promover el desarrollo y madurez espiritual de los miembros, fomentando proyectos cristianos, educativos, culturales y de asistencia social, para impactar positivamente en la sociedad y cumplir con los fines de la Iglesia.
+	
+	\subsection{Misión y Visión del Software}
+	\paragraph{Misión} Administrar con transparencia, fidelidad y orden los recursos financieros y bienes materiales encomendados a la Iglesia Evangélica Getsemaní, facilitando la rendición de cuentas de cada departamento ante la Junta Directiva y la Asamblea General.
 	
 	\paragraph{Visión} Ser un modelo de gestión administrativa eclesiástica respaldado por herramientas tecnológicas modernas, que automaticen los procesos financieros y de inventario, garantizando integridad de la información y agilidad en la preparación de asambleas.
 	
-	\paragraph{Valores institucionales que guían el diseño del sistema:}
+	\subsection{Valores institucionales que guían el diseño del sistema}
 	\begin{itemize}
 		\item \textbf{Transparencia:} Todo movimiento debe quedar registrado y ser trazable.
 		\item \textbf{Mayordomía:} Los recursos administrados no son propios, son encomendados; el sistema debe reflejar responsabilidad sobre cada aportación.
@@ -187,10 +193,11 @@
 		\item \textbf{Orden:} Catálogos y nomenclaturas estandarizadas evitan la dispersión de criterios entre departamentos.
 		\item \textbf{Servicio colaborativo:} Cada tesorero de departamento trabaja de forma autónoma, pero dentro de un marco común administrado centralmente.
 	\end{itemize}
-	
+
+	\newpage
 	% --- 4. PLANTEAMIENTO DEL PROBLEMA ---
 	\section{Planteamiento del Problema}
-	Actualmente, la tesorería de cada consejo, comité y congregación anexa lleva sus registros en hojas de cálculo independientes (\texttt{PorConsejo\_o\_comite.xlsx}), las cuales luego son transcritas manualmente a un archivo consolidado (\texttt{InformeGeneral.xlsx}) para su presentación en asambleas.
+	Actualmente, la tesorería de cada consejo, comité y congregación anexa lleva sus registros en hojas de cálculo independientes , las cuales luego son transcritas manualmente a un archivo consolidado  para su presentación en asambleas.
 	
 	Este proceso manual genera los siguientes problemas concretos:
 	\begin{itemize}
@@ -243,7 +250,7 @@
 		\item CRM completo de miembros con control de asistencia.
 	\end{itemize}
 	
-	\newpage
+
 	% --- 7. ANÁLISIS ECONÓMICO Y DE RIESGOS ---
 	\section{Análisis Económico y de Riesgos}
 	
@@ -357,7 +364,7 @@
 		\end{tabularx}
 	\end{table}
 	
-	\newpage
+
 	% --- 10. CASOS DE USO ---
 	\section{Casos de Uso}
 	
@@ -436,7 +443,7 @@
 		\end{tikzpicture}
 	\end{center}
 	
-	\newpage
+
 	% --- 11. ANÁLISIS DEL PROCESO ACTUAL ---
 	\section{Análisis del Proceso Actual (Excel) y Diseño de Datos}
 	
@@ -450,19 +457,25 @@
 	El error de fondo del flujo actual en Excel es que cada reporte se construye "a mano" a partir de otro reporte. El diseño propuesto invierte esta lógica:
 	
 	\begin{center}
-		\begin{tikzpicture}[node distance=1cm, box/.style={rectangle, draw=primary, fill=cardbg, rounded corners, font=\small\bfseries, align=center, inner sep=6pt}]
-			\node[box] (m) {Movimiento Diario (Ingreso / Egreso)};
-			\node[box, right=of m] (bd) {Base de Datos Cloud};
-			\node[box, right=of bd] (rm) {Reporte Mensual};
-			\node[box, below=0.6cm of rm] (ra) {Reporte Anual};
-			\node[box, below=0.6cm of ra] (ig) {Informe General de Asamblea};
-			
-			\draw[->, >=stealth, thick] (m) -- (bd);
-			\draw[->, >=stealth, thick] (bd) -- (rm);
-			\draw[->, >=stealth, thick] (rm) -- (ra);
-			\draw[->, >=stealth, thick] (ra) -- (ig);
-		\end{tikzpicture}
+		\scalebox{0.8}{
+			\begin{tikzpicture}[node distance=0.6cm, 
+				box/.style={rectangle, draw=primary, fill=cardbg, rounded corners, 
+					font=\scriptsize\bfseries, align=center, inner sep=10pt}]
+				
+				\node[box] (m) {Movimiento Diario (Ingreso / Egreso)};
+				\node[box, right=of m] (bd) {Base de Datos Cloud};
+				\node[box, right=of bd] (rm) {Reporte Mensual};
+				\node[box, below=0.4cm of rm] (ra) {Reporte Anual};
+				\node[box, below=0.4cm of ra] (ig) {Informe General de Asamblea};
+				
+				\draw[->, >=stealth, thick] (m) -- (bd);
+				\draw[->, >=stealth, thick] (bd) -- (rm);
+				\draw[->, >=stealth, thick] (rm) -- (ra);
+				\draw[->, >=stealth, thick] (ra) -- (ig);
+			\end{tikzpicture}
+		}
 	\end{center}
+	
 	
 	% --- 12. DIAGRAMA BPMN (PÁGINA COMPLETA) ---
 	\newpage
@@ -560,15 +573,21 @@
 	
 	\subsection{Topología de infraestructura}
 	\begin{center}
-		\begin{tikzpicture}[node distance=1.2cm, box/.style={rectangle, draw=primary, fill=cardbg, rounded corners, font=\small\bfseries, align=center, inner sep=6pt}]
+		\begin{tikzpicture}[node distance=2cm, 
+			box/.style={rectangle, draw=primary, fill=cardbg, rounded corners, 
+				font=\small\bfseries, align=center, inner sep=6pt}]
+			
+			
 			\node[box] (cli) {[Navegador del Tesorero / Admin]};
 			\node[box, right=of cli] (srv) {[Servidor Web Laravel (Blade)]};
-			\node[box, right=of srv] (db) {[Base de Datos MySQL Cloud]};
+			\node[box, below=of srv] (db) {[Base de Datos MySQL Cloud]};
+			
 			
 			\draw[->, >=stealth, thick] (cli) -- node[above, font=\tiny] {HTTPS} (srv);
-			\draw[->, >=stealth, thick] (srv) -- node[above, font=\tiny] {Eloquent ORM} (db);
+			\draw[->, >=stealth, thick] (srv) -- node[right, font=\tiny] {Eloquent ORM} (db);
 		\end{tikzpicture}
 	\end{center}
+	
 	
 	\newpage
 	% --- 15. MODELO DE BASE DE DATOS ---
