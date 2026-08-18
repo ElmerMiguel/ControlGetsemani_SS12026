@@ -18,6 +18,8 @@
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{pdflscape}
 
 % Define color palette
 \definecolor{primary}{RGB}{37, 99, 235}     % Blue #2563EB
@@ -609,10 +611,36 @@
 	
 	% --- 16. GESTIÓN ÁGIL ---
 	\section{Gestión Ágil del Proyecto (Scrum / Jira / GitFlow)}
+	
 	\begin{itemize}
-		\item \textbf{Jira:} Backlog estructurado en Historias de Usuario con Sprints de 3 semanas.
-		\item \textbf{Estrategia GitFlow:} Rama \texttt{main} para versiones estables, \texttt{develop} para integración y ramas \texttt{feature/...} por cada módulo.
+		\item \textbf{Scrum Individual:} El proyecto será desarrollado por una sola persona, aplicando los principios de Scrum de manera adaptada. Se organizarán \textit{sprints} de referencia de 5 días hábiles para estructurar el trabajo y la autoevaluación, permitiendo avances más frecuentes y entregables parciales dentro de cada fase del cronograma.
+		
+		\item \textbf{Jira como tablero personal:} El backlog se gestionará en Jira, estructurado en Historias de Usuario con criterios de aceptación claros. El tablero Kanban servirá como herramienta de autoorganización, permitiendo visualizar tareas pendientes, en progreso y completadas. Cada historia se estimará en \textit{story points} como referencia de esfuerzo.
+		
+		\item \textbf{Estrategia GitFlow:} 
+		\begin{itemize}
+			\item Rama \texttt{main}: versiones estables y liberadas en producción.
+			\item Rama \texttt{develop}: integración de funcionalidades en curso.
+			\item Ramas \texttt{feature/...}: desarrollo de nuevas funcionalidades.
+			\item Ramas \texttt{hotfix/...}: correcciones críticas en producción.
+		\end{itemize}
+		Aunque sea un solo desarrollador, se mantendrá el flujo de Pull Requests como práctica de disciplina y documentación.
+		
+		\item \textbf{Integración Continua (CI/CD):} Cada commit en ramas relevantes activará pipelines automáticos de compilación, pruebas unitarias y despliegue en entornos de staging. Esto asegura retroalimentación inmediata y evita errores manuales.
+		
+		\item \textbf{Roles Unificados:} El mismo responsable asumirá los tres roles de Scrum:
+		\begin{itemize}
+			\item \textit{Product Owner}: define la visión y prioriza el backlog.
+			\item \textit{Scrum Master}: asegura la disciplina metodológica.
+			\item \textit{Development Team}: implementa las funcionalidades técnicas.
+		\end{itemize}
+		
+		\item \textbf{Métricas Personales:} Se utilizarán \textit{burndown charts} y velocidad de sprint como herramientas de autoevaluación, permitiendo ajustar la planificación futura en función de resultados previos.
+		
+		\item \textbf{Documentación y Mejora Continua:} Se mantendrá documentación técnica y de usuario en paralelo al desarrollo. Al cierre de cada sprint se registrarán aprendizajes y mejoras para optimizar el trabajo en ciclos posteriores.
 	\end{itemize}
+	
+	
 	
 	\newpage
 	
@@ -753,7 +781,38 @@
 	\end{table}
 	
 	\newpage
-	% --- 19. Mackups ---
-	\section{Anexo Mackups}
+	% --- 19. Mockups ---
+	\section{Anexo Mockups}
+	\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.7\linewidth]{img/1}
+		\caption{Login}
+		\label{fig:1}
+	\end{figure}
+	\newpage
+	
+	
+	\begin{landscape}
+		
+	\begin{figure}
+		\centering
+		\includegraphics[width=1\linewidth]{img/2}
+		\caption{Dashboard}
+		\label{fig:2}
+	\end{figure}
+	
+	\newpage
+	\begin{figure}
+		\centering
+		\includegraphics[width=1\linewidth]{img/3}
+		\caption{Registro de Transacciones}
+		\label{fig:3}
+	\end{figure}
+	
+	
+	
+	
+	\end{landscape}
+	
 	
 \end{document}
