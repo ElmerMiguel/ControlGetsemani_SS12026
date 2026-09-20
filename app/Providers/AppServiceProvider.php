@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Policies\UserPolicy;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,13 +34,7 @@ class AppServiceProvider extends ServiceProvider
         // Establece el idioma español para la manipulación y formateo de fechas con la librería Carbon.
         Carbon::setLocale('es');
 
-        // TODO-P4: Helper temporal para desarrollo de navegación en P3 hasta la configuración completa de Spatie en P4.
-        Blade::if('canPermiso', function ($permiso) {
-            if (auth()->check() && method_exists(auth()->user(), 'hasPermissionTo')) {
-                return auth()->user()->hasPermissionTo($permiso);
-            }
-
-            return true; // Temporalmente visible en desarrollo
-        });
+        // Registro de políticas de autorización
+        Gate::policy(User::class, UserPolicy::class);
     }
 }
