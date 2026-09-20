@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\CambiarPasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,6 +22,13 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Gestión de Usuarios (RN-14)
+    Route::patch('/usuarios/{usuario}/estado', [UsersController::class, 'cambiarEstado'])->name('usuarios.estado');
+    Route::post('/usuarios/{usuario}/password', [UsersController::class, 'generarPassword'])->name('usuarios.password');
+    Route::resource('usuarios', UsersController::class)
+        ->parameters(['usuarios' => 'usuario'])
+        ->except(['show', 'destroy']);
 });
 
 require __DIR__.'/auth.php';
