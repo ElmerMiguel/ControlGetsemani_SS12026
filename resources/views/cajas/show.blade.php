@@ -243,9 +243,11 @@
                     <p class="text-xs text-slate-500">Períodos cerrados y estados de revisión contable.</p>
                 </div>
                 @can('cortes.solicitar')
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200">
-                        Cortes en Módulo P9
-                    </span>
+                    @if ($caja->activa)
+                        <x-ui.button href="{{ route('cortes.create', ['caja_id' => $caja->id]) }}" variant="primary" size="sm">
+                            + Solicitar Corte
+                        </x-ui.button>
+                    @endif
                 @endcan
             </div>
 
@@ -259,11 +261,12 @@
                             <th class="px-4 py-3">Egresos</th>
                             <th class="px-4 py-3">Saldo Final</th>
                             <th class="px-4 py-3">Estado</th>
+                            <th class="px-4 py-3 text-right">Acción</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($cortes as $corte)
-                            <tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-4 py-3 whitespace-nowrap text-xs font-mono text-slate-700">
                                     {{ $corte->periodo_inicio?->format('d/m/Y') }} al {{ $corte->periodo_fin?->format('d/m/Y') }}
                                 </td>
@@ -280,21 +283,20 @@
                                     {{ formato_moneda($corte->saldo_final) }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    @if ($corte->estado->value === 'aprobado')
-                                        <x-ui.badge variant="success">Aprobado</x-ui.badge>
-                                    @elseif ($corte->estado->value === 'pendiente')
-                                        <x-ui.badge variant="warning">Pendiente</x-ui.badge>
-                                    @elseif ($corte->estado->value === 'rechazado')
-                                        <x-ui.badge variant="danger">Rechazado</x-ui.badge>
-                                    @else
-                                        <x-ui.badge variant="info">{{ ucfirst($corte->estado->value) }}</x-ui.badge>
-                                    @endif
+                                    <x-ui.badge :variant="$corte->estado->badgeVariant()">
+                                        {{ $corte->estado->label() }}
+                                    </x-ui.badge>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-right text-xs">
+                                    <a href="{{ route('cortes.show', $corte) }}" class="text-primary-600 hover:text-primary-800 font-semibold">
+                                        Detalle &rarr;
+                                    </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-slate-400 italic">
-                                    Esta caja aún no cuenta con cortes de período registrados. El módulo completo de cortes se activa en P9.
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-400 italic">
+                                    Esta caja aún no cuenta con cortes de período registrados.
                                 </td>
                             </tr>
                         @endforelse

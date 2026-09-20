@@ -7,10 +7,12 @@ use App\Http\Controllers\CajaActivaController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CatalogoEgresoController;
 use App\Http\Controllers\CatalogoIngresoController;
+use App\Http\Controllers\CorteCajaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\EgresoController;
 use App\Http\Controllers\IngresoController;
+use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -78,6 +80,18 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
     // Bitácora de Auditoría (RN-16) - Solo Lectura
     Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
     Route::get('/bitacora/{bitacora}', [BitacoraController::class, 'show'])->name('bitacora.show');
+
+    // Cortes de Caja (RN-05, RN-08, RN-09)
+    Route::get('/cortes/preview', [CorteCajaController::class, 'preview'])->name('cortes.preview');
+    Route::post('/cortes/{corte}/aprobar', [CorteCajaController::class, 'aprobar'])->name('cortes.aprobar');
+    Route::post('/cortes/{corte}/rechazar', [CorteCajaController::class, 'rechazar'])->name('cortes.rechazar');
+    Route::post('/cortes/{corte}/reabrir', [CorteCajaController::class, 'reabrir'])->name('cortes.reabrir');
+    Route::resource('cortes', CorteCajaController::class)->only(['index', 'create', 'store', 'show']);
+
+    // Notificaciones del Sistema
+    Route::get('/notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer'])->name('notificaciones.leer');
+    Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas'])->name('notificaciones.leer-todas');
 });
 
 require __DIR__.'/auth.php';

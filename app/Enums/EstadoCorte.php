@@ -18,4 +18,13 @@ enum EstadoCorte: string
             self::Reabierto => 'Reabierto',
         };
     }
+
+    public function badgeVariant(): string
+    {
+        return match ($this) {
+            self::Pendiente => 'sky',
+            self::Aprobado => 'success',
+            self::Rechazado, self::Reabierto => 'danger',
+        };
+    }
 }
