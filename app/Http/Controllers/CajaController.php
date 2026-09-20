@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateCajaRequest;
 use App\Models\Caja;
 use App\Models\Departamento;
 use App\Models\User;
+use App\Services\CajaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -103,15 +104,56 @@ class CajaController extends Controller
     }
 
     /**
-     * Vista de detalle de caja (esqueleto base para Fase 2 P8).
+     * Vista de detalle de caja en tiempo real (RN-02, RN-10).
      */
-    public function show(Caja $caja): View
+    public function show(Caja $caja, CajaService $cajaService): View
     {
         Gate::authorize('view', $caja);
 
-        $caja->load(['departamento', 'tesoreros']);
+        $caja->load(['departamento', 'tesoreros', 'cortesCaja' => fn ($q) => $q->latest('periodo_fin')->limit(10)]);
 
-        return view('cajas.show', compact('caja'));
+        $saldoActual = $cajaService->saldoActual($caja);
+        $totalesMes = $cajaService->totalesMesActual($caja);
+
+        // Últimos 10 movimientos unificados (ingresos y egresos mezclados por fecha)
+        $ingresos = $caja->ingresos()
+            ->with(['cuenta', 'aportante', 'usuario'])
+            ->latest('fecha')
+            ->latest('id')
+            ->limit(10)
+            ->get()
+            ->map(function ($ingreso) {
+                $ingreso->tipo_movimiento = 'ingreso';
+
+                return $ingreso;
+            });
+
+        $egresos = $caja->egresos()
+            ->with(['cuenta', 'usuario'])
+            ->latest('fecha')
+            ->latest('id')
+            ->limit(10)
+            ->get()
+            ->map(function ($egreso) {
+                $egreso->tipo_movimiento = 'egreso';
+
+                return $egreso;
+            });
+
+        $movimientos = $ingresos->concat($egresos)
+            ->sort(function ($a, $b) {
+                if ($a->fecha->equalTo($b->fecha)) {
+                    return $b->id <=> $a->id;
+                }
+
+                return $b->fecha <=> $a->fecha;
+            })
+            ->take(10)
+            ->values();
+
+        $cortes = $caja->cortesCaja;
+
+        return view('cajas.show', compact('caja', 'saldoActual', 'totalesMes', 'movimientos', 'cortes'));
     }
 
     /**

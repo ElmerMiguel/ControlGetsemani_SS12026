@@ -50,4 +50,12 @@ class Aportante extends Model
 
         return '•••• •••• • '.$ultimos4;
     }
+
+    /**
+     * Alias de nombre_completo para conveniencia en vistas.
+     */
+    public function getNombreAttribute(): string
+    {
+        return $this->nombre_completo ?? '';
+    }
 }

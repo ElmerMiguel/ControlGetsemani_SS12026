@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\MedioCaja;
 use App\Models\Concerns\Auditable;
+use App\Services\CajaService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -111,16 +113,20 @@ class Caja extends Model
      */
     public function calcularSaldoActual(): string
     {
-        $totalIngresos = (string) ($this->ingresos()
-            ->whereDate('fecha', '>=', $this->fecha_apertura)
-            ->sum('monto') ?? '0.00');
+        return app(CajaService::class)->saldoActual($this);
+    }
 
-        $totalEgresos = (string) ($this->egresos()
-            ->whereDate('fecha', '>=', $this->fecha_apertura)
-            ->sum('monto') ?? '0.00');
+    /**
+     * RN-15: Scope para limitar consultas a las cajas a las que tiene acceso el usuario.
+     */
+    public function scopeAccesiblesPara(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
 
-        $saldoConIngresos = bcadd((string) $this->saldo_apertura, $totalIngresos, 2);
-
-        return bcsub($saldoConIngresos, $totalEgresos, 2);
+        return $query->whereHas('usuarios', function ($q) use ($user) {
+            $q->where('users.id', $user->id);
+        });
     }
 }
