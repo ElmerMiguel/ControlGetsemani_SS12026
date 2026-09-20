@@ -6,6 +6,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Departamento;
 use App\Models\User;
+use App\Services\BitacoraService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -132,20 +133,65 @@ class UsersController extends Controller
      */
     public function update(UpdateUserRequest $request, User $usuario): RedirectResponse
     {
+        $bitacora = app(BitacoraService::class);
+
+        $rolesAntes = $usuario->roles->pluck('name')->all();
+        $permisosAntes = $usuario->permissions->pluck('name')->all();
+        $cajasAntes = array_map('intval', $usuario->cajas->pluck('id')->all());
+
         $usuario->update([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
         ]);
 
-        $usuario->syncRoles([$request->input('rol')]);
-
-        if ($request->input('rol') === 'tesorero') {
-            $usuario->cajas()->sync($request->input('cajas', []));
-        } else {
-            $usuario->cajas()->detach();
+        // 1. Auditoría de cambio de rol
+        $nuevoRol = [$request->input('rol')];
+        if ($rolesAntes !== $nuevoRol) {
+            $usuario->syncRoles($nuevoRol);
+            $bitacora->registrar(
+                'usuario.rol_cambiado',
+                $usuario,
+                "Cambió rol de {$usuario->name}: ".implode(', ', $rolesAntes).' → '.implode(', ', $nuevoRol),
+                ['roles' => $rolesAntes],
+                ['roles' => $nuevoRol]
+            );
         }
 
-        $usuario->syncPermissions($request->input('permisos', []));
+        // 2. Auditoría de cambio de cajas
+        $nuevasCajas = $request->input('rol') === 'tesorero' ? array_map('intval', $request->input('cajas', [])) : [];
+        $cajasAntesSort = $cajasAntes;
+        $cajasNuevasSort = $nuevasCajas;
+        sort($cajasAntesSort);
+        sort($cajasNuevasSort);
+
+        if ($cajasAntesSort !== $cajasNuevasSort) {
+            $usuario->cajas()->sync($nuevasCajas);
+            $bitacora->registrar(
+                'usuario.cajas_cambiadas',
+                $usuario,
+                "Modificó cajas asignadas a {$usuario->name}",
+                ['cajas' => $cajasAntes],
+                ['cajas' => $nuevasCajas]
+            );
+        }
+
+        // 3. Auditoría de permisos directos
+        $nuevosPermisos = $request->input('permisos', []);
+        $permisosAntesSort = $permisosAntes;
+        $permisosNuevosSort = $nuevosPermisos;
+        sort($permisosAntesSort);
+        sort($permisosNuevosSort);
+
+        if ($permisosAntesSort !== $permisosNuevosSort) {
+            $usuario->syncPermissions($nuevosPermisos);
+            $bitacora->registrar(
+                'usuario.permisos_cambiados',
+                $usuario,
+                "Modificó permisos directos de {$usuario->name}",
+                ['permisos' => $permisosAntes],
+                ['permisos' => $nuevosPermisos]
+            );
+        }
 
         return redirect()->route('usuarios.index')->with('status', 'Usuario actualizado exitosamente.');
     }
