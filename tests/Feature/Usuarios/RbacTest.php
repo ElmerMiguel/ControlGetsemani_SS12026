@@ -241,4 +241,39 @@ class RbacTest extends TestCase
         $this->assertTrue($tesoreroActualizado->must_change_password);
         $this->assertTrue(Hash::check($tempPassword, $tesoreroActualizado->password));
     }
+
+    public function test_admin_puede_editar_usuario_conservando_su_mismo_correo(): void
+    {
+        $admin = User::factory()->create([
+            'activo' => true,
+            'must_change_password' => false,
+        ]);
+        $admin->assignRole('admin');
+
+        $depto = Departamento::factory()->create();
+        $caja = Caja::factory()->create(['departamento_id' => $depto->id]);
+
+        $tesorero = User::factory()->create([
+            'email' => 'tesorero.existente@getsemani.test',
+            'name' => 'Nombre Original',
+            'activo' => true,
+            'must_change_password' => false,
+        ]);
+        $tesorero->assignRole('tesorero');
+        $tesorero->cajas()->attach($caja->id);
+
+        $this->actingAs($admin);
+
+        // Editamos el nombre pero conservamos el mismo correo
+        $response = $this->put(route('usuarios.update', $tesorero), [
+            'name' => 'Nombre Modificado',
+            'email' => 'tesorero.existente@getsemani.test',
+            'rol' => 'tesorero',
+            'cajas' => [$caja->id],
+        ]);
+
+        $response->assertRedirect(route('usuarios.index'));
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals('Nombre Modificado', $tesorero->fresh()->name);
+    }
 }
