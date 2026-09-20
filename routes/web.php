@@ -3,11 +3,14 @@
 use App\Http\Controllers\AportanteController;
 use App\Http\Controllers\Auth\CambiarPasswordController;
 use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\CajaActivaController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CatalogoEgresoController;
 use App\Http\Controllers\CatalogoIngresoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\EgresoController;
+use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +63,17 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
     // Padrón de Aportantes
     Route::patch('/aportantes/{aportante}/estado', [AportanteController::class, 'cambiarEstado'])->name('aportantes.estado');
     Route::resource('aportantes', AportanteController::class)->except(['show', 'destroy']);
+
+    // Selección de Caja Activa
+    Route::post('/caja-activa', CajaActivaController::class)->name('caja.activa');
+
+    // Ingresos Contables (RN-01..RN-07)
+    Route::post('/ingresos/{ingreso}/anular', [IngresoController::class, 'anular'])->name('ingresos.anular');
+    Route::resource('ingresos', IngresoController::class)->except(['show', 'destroy']);
+
+    // Egresos Contables (RN-01..RN-07, RN-10)
+    Route::post('/egresos/{egreso}/anular', [EgresoController::class, 'anular'])->name('egresos.anular');
+    Route::resource('egresos', EgresoController::class)->except(['show', 'destroy']);
 
     // Bitácora de Auditoría (RN-16) - Solo Lectura
     Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');

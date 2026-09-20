@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MedioCaja;
 use App\Models\Concerns\Auditable;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -87,5 +88,39 @@ class Caja extends Model
             || $this->cortesCaja()->exists()
             || $this->transferenciasOrigen()->exists()
             || $this->transferenciasDestino()->exists();
+    }
+
+    /**
+     * RN-05: Determina si la fecha indicada se encuentra dentro de un periodo bloqueado.
+     * Existe un corte de esa caja en estado 'pendiente' o 'aprobado' con periodo_inicio <= fecha <= periodo_fin.
+     */
+    public function estaBloqueada($fecha): bool
+    {
+        $f = is_string($fecha) ? Carbon::parse($fecha)->format('Y-m-d') : $fecha->format('Y-m-d');
+
+        return $this->cortesCaja()
+            ->whereIn('estado', ['pendiente', 'aprobado'])
+            ->whereDate('periodo_inicio', '<=', $f)
+            ->whereDate('periodo_fin', '>=', $f)
+            ->exists();
+    }
+
+    /**
+     * RN-02: Saldo actual de una caja = saldo_apertura + sum(ingresos vigentes) - sum(egresos vigentes),
+     * con fecha >= fecha_apertura. Se calcula al consultar; no se guarda.
+     */
+    public function calcularSaldoActual(): string
+    {
+        $totalIngresos = (string) ($this->ingresos()
+            ->whereDate('fecha', '>=', $this->fecha_apertura)
+            ->sum('monto') ?? '0.00');
+
+        $totalEgresos = (string) ($this->egresos()
+            ->whereDate('fecha', '>=', $this->fecha_apertura)
+            ->sum('monto') ?? '0.00');
+
+        $saldoConIngresos = bcadd((string) $this->saldo_apertura, $totalIngresos, 2);
+
+        return bcsub($saldoConIngresos, $totalEgresos, 2);
     }
 }

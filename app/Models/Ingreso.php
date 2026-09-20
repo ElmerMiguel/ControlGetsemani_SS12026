@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AccesiblePorCajas;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ingreso extends Model
 {
-    use Auditable, HasFactory, SoftDeletes;
+    use AccesiblePorCajas, Auditable, HasFactory, SoftDeletes;
 
     protected $table = 'ingresos';
 
@@ -64,5 +65,13 @@ class Ingreso extends Model
     public function anulador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'anulado_por');
+    }
+
+    /**
+     * RN-05 / RN-06: Verifica si el ingreso pertenece a un periodo bloqueado por corte.
+     */
+    public function esBloqueado(): bool
+    {
+        return $this->caja?->estaBloqueada($this->fecha) ?? false;
     }
 }

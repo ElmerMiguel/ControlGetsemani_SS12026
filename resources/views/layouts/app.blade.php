@@ -212,10 +212,32 @@
 
                         <!-- Selector de Caja Activa (§8 y §9.2) -->
                         <div class="hidden sm:flex items-center text-sm">
-                            <span class="text-gray-500 me-2">Caja activa:</span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-200">
-                                {{ session('caja_activa_nombre', 'Todas las Cajas') }}
-                            </span>
+                            <span class="text-slate-500 text-xs font-medium me-2">Caja activa:</span>
+                            @if(isset($cajasDisponibles) && $cajasDisponibles->isNotEmpty())
+                                <form method="POST" action="{{ route('caja.activa') }}" class="inline-flex items-center">
+                                    @csrf
+                                    <select
+                                        name="caja_id"
+                                        onchange="this.form.submit()"
+                                        class="text-xs font-semibold py-1 px-2.5 rounded-md border-primary-300 bg-primary-50 text-primary-800 focus:border-primary-500 focus:ring-primary-500 cursor-pointer shadow-sm"
+                                    >
+                                        @can('cajas.gestionar')
+                                            <option value="todas" @selected(!session('caja_activa_id'))>
+                                                Todas las Cajas
+                                            </option>
+                                        @endcan
+                                        @foreach($cajasDisponibles as $cajaDisp)
+                                            <option value="{{ $cajaDisp->id }}" @selected((string) session('caja_activa_id') === (string) $cajaDisp->id)>
+                                                {{ $cajaDisp->codigo }} &bull; {{ $cajaDisp->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </form>
+                            @else
+                                <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-600">
+                                    Sin cajas asignadas
+                                </span>
+                            @endif
                         </div>
                     </div>
 
