@@ -123,4 +123,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'admin_name' => env('ADMIN_NAME', 'Administrador General'),
+    'admin_email' => env('ADMIN_EMAIL', 'admin@getsemani.test'),
+    'admin_password' => env('ADMIN_PASSWORD'),
+
 ];

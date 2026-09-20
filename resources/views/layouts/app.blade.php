@@ -67,8 +67,7 @@
                         Finanzas
                     </div>
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('cajas.ver') cuando Spatie esté configurado --}}
-                    @canPermiso('cajas.ver')
+                    @canany(['cajas.gestionar', 'ingresos.ver', 'egresos.ver'])
                         <a
                             href="{{ Route::has('cajas.index') ? route('cajas.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('cajas.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -78,10 +77,9 @@
                             </svg>
                             Cajas
                         </a>
-                    @endcanPermiso
+                    @endcanany
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('ingresos.ver') --}}
-                    @canPermiso('ingresos.ver')
+                    @can('ingresos.ver')
                         <a
                             href="{{ Route::has('ingresos.index') ? route('ingresos.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('ingresos.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -91,10 +89,9 @@
                             </svg>
                             Ingresos
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('egresos.ver') --}}
-                    @canPermiso('egresos.ver')
+                    @can('egresos.ver')
                         <a
                             href="{{ Route::has('egresos.index') ? route('egresos.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('egresos.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -104,10 +101,9 @@
                             </svg>
                             Egresos
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('cortes.solicitar') --}}
-                    @canPermiso('cortes.solicitar')
+                    @can('cortes.solicitar')
                         <a
                             href="{{ Route::has('cortes.index') ? route('cortes.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('cortes.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -117,10 +113,9 @@
                             </svg>
                             Cortes de Caja
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('reportes.ver') --}}
-                    @canPermiso('reportes.ver')
+                    @can('reportes.ver')
                         <a
                             href="{{ Route::has('reportes.caja') ? route('reportes.caja') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('reportes.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -130,14 +125,13 @@
                             </svg>
                             Reportes
                         </a>
-                    @endcanPermiso
+                    @endcan
 
                     <div class="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                         Administración
                     </div>
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('aportantes.gestionar') --}}
-                    @canPermiso('aportantes.gestionar')
+                    @can('aportantes.gestionar')
                         <a
                             href="{{ Route::has('aportantes.index') ? route('aportantes.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('aportantes.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -147,10 +141,9 @@
                             </svg>
                             Aportantes
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('catalogos.ver') --}}
-                    @canPermiso('catalogos.ver')
+                    @can('catalogos.ver')
                         <a
                             href="{{ Route::has('catalogos.ingresos.index') ? route('catalogos.ingresos.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('catalogos.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -160,10 +153,9 @@
                             </svg>
                             Catálogos
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('departamentos.gestionar') --}}
-                    @canPermiso('departamentos.gestionar')
+                    @can('departamentos.gestionar')
                         <a
                             href="{{ Route::has('departamentos.index') ? route('departamentos.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('departamentos.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -173,10 +165,9 @@
                             </svg>
                             Departamentos
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('usuarios.gestionar') --}}
-                    @canPermiso('usuarios.gestionar')
+                    @can('usuarios.gestionar')
                         <a
                             href="{{ Route::has('usuarios.index') ? route('usuarios.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('usuarios.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -186,10 +177,9 @@
                             </svg>
                             Usuarios
                         </a>
-                    @endcanPermiso
+                    @endcan
 
-                    {{-- TODO-P4: Reemplazar @canPermiso por @can('bitacora.ver') --}}
-                    @canPermiso('bitacora.ver')
+                    @can('bitacora.ver')
                         <a
                             href="{{ Route::has('bitacora.index') ? route('bitacora.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('bitacora.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -199,7 +189,7 @@
                             </svg>
                             Bitácora
                         </a>
-                    @endcanPermiso
+                    @endcan
                 </nav>
 
                 <!-- Pie del Sidebar -->
