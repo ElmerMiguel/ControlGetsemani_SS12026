@@ -367,4 +367,21 @@ class CorteCajaTest extends TestCase
         $this->expectException(DescuadreSnapshotException::class);
         $this->corteService->aprobar($this->admin, $corte);
     }
+
+    public function test_pantallas_de_cortes_renderizan_exitosamente(): void
+    {
+        $corte = $this->corteService->solicitar($this->tesorero, $this->caja, '2026-01-31');
+
+        $this->actingAs($this->tesorero)
+            ->get(route('cortes.index'))
+            ->assertOk();
+
+        $this->actingAs($this->tesorero)
+            ->get(route('cortes.create', ['caja_id' => $this->caja->id]))
+            ->assertOk();
+
+        $this->actingAs($this->tesorero)
+            ->get(route('cortes.show', $corte))
+            ->assertOk();
+    }
 }

@@ -191,7 +191,12 @@
                     <x-ui.button href="{{ route('cortes.index') }}" variant="secondary">
                         Cancelar
                     </x-ui.button>
-                    <x-ui.button type="submit" variant="primary" :disabled="error !== null">
+                    <x-ui.button 
+                        type="submit" 
+                        variant="primary" 
+                        x-bind:disabled="error !== null || loading"
+                        x-bind:class="(error !== null || loading) ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''"
+                    >
                         Confirmar y Solicitar Corte
                     </x-ui.button>
                 </div>
