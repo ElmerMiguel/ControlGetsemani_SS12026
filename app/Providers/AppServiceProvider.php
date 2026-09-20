@@ -6,7 +6,17 @@ use App\Listeners\ActualizarUltimoLogin;
 use App\Listeners\RegistrarLogin;
 use App\Listeners\RegistrarLoginFallido;
 use App\Listeners\RegistrarLogout;
+use App\Models\Aportante;
+use App\Models\Caja;
+use App\Models\CatalogoEgreso;
+use App\Models\CatalogoIngreso;
+use App\Models\Departamento;
 use App\Models\User;
+use App\Policies\AportantePolicy;
+use App\Policies\CajaPolicy;
+use App\Policies\CatalogoEgresoPolicy;
+use App\Policies\CatalogoIngresoPolicy;
+use App\Policies\DepartamentoPolicy;
 use App\Policies\UserPolicy;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Failed;
@@ -44,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Registro de políticas de autorización
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Departamento::class, DepartamentoPolicy::class);
+        Gate::policy(Caja::class, CajaPolicy::class);
+        Gate::policy(CatalogoIngreso::class, CatalogoIngresoPolicy::class);
+        Gate::policy(CatalogoEgreso::class, CatalogoEgresoPolicy::class);
+        Gate::policy(Aportante::class, AportantePolicy::class);
 
         // Registro de eventos de autenticación para auditoría (RN-16)
         Event::listen(Login::class, ActualizarUltimoLogin::class);
