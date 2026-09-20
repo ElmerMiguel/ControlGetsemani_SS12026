@@ -103,7 +103,7 @@
                         </a>
                     @endcan
 
-                    @can('cortes.solicitar')
+                    @canany(['cortes.solicitar', 'cortes.aprobar'])
                         <a
                             href="{{ Route::has('cortes.index') ? route('cortes.index') : '#' }}"
                             class="flex items-center px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('cortes.*') ? 'bg-primary-600 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
@@ -243,13 +243,82 @@
 
                     <!-- Lado Derecho: Notificaciones y Usuario -->
                     <div class="flex items-center space-x-4">
-                        <!-- Notificaciones (§10) -->
-                        <button type="button" class="relative p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
-                            <span class="sr-only">Ver notificaciones</span>
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </button>
+                        <!-- Campana de Notificaciones interactiva (§10) -->
+                        <div class="relative" x-data="{ notifOpen: false }">
+                            <button
+                                @click="notifOpen = !notifOpen"
+                                type="button"
+                                class="relative p-1.5 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 focus:outline-none"
+                            >
+                                <span class="sr-only">Ver notificaciones</span>
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                @php
+                                    $numNoLeidas = auth()->user()->unreadNotifications->count();
+                                @endphp
+                                @if ($numNoLeidas > 0)
+                                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-rose-600 rounded-full">
+                                        {{ $numNoLeidas > 9 ? '9+' : $numNoLeidas }}
+                                    </span>
+                                @endif
+                            </button>
+
+                            <div
+                                x-show="notifOpen"
+                                @click.away="notifOpen = false"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="origin-top-right absolute right-0 mt-2 w-80 sm:w-96 rounded-xl shadow-xl py-2 bg-white ring-1 ring-black/5 z-50 divide-y divide-slate-100"
+                                style="display: none;"
+                            >
+                                <div class="px-4 py-2 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notificaciones</span>
+                                    @if ($numNoLeidas > 0)
+                                        <form method="POST" action="{{ route('notificaciones.leer-todas') }}">
+                                            @csrf
+                                            <button type="submit" class="text-[11px] text-primary-600 hover:text-primary-800 font-semibold">
+                                                Marcar leídas
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+
+                                <div class="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                                    @forelse (auth()->user()->notifications()->take(5)->get() as $notif)
+                                        <div class="p-3 text-xs {{ $notif->read_at ? 'opacity-70 hover:bg-slate-50' : 'bg-primary-50/30 hover:bg-primary-50/50' }} transition">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <span class="font-bold text-slate-900 block truncate">{{ $notif->data['titulo'] ?? 'Aviso' }}</span>
+                                                <span class="text-[10px] text-slate-400 font-mono whitespace-nowrap">{{ $notif->created_at->diffForHumans() }}</span>
+                                            </div>
+                                            <p class="text-slate-600 mt-1 line-clamp-2">{{ $notif->data['mensaje'] ?? '' }}</p>
+                                            <div class="mt-2 text-right">
+                                                <form method="POST" action="{{ route('notificaciones.leer', $notif->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="font-bold text-primary-600 hover:text-primary-800">
+                                                        Ver detalle &rarr;
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="py-6 text-center text-slate-400 text-xs italic">
+                                            No tienes notificaciones recientes.
+                                        </div>
+                                    @endforelse
+                                </div>
+
+                                <div class="px-4 py-2 text-center bg-slate-50 rounded-b-xl">
+                                    <a href="{{ route('notificaciones.index') }}" class="text-xs font-semibold text-primary-600 hover:text-primary-800">
+                                        Ver todas las notificaciones
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Menú de Usuario con Alpine Dropdown -->
                         <div class="relative" x-data="{ userMenuOpen: false }">

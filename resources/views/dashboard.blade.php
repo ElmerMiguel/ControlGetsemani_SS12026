@@ -77,7 +77,7 @@
                     :subtext="now()->translatedFormat('F Y') . ' (externos)'"
                     color="danger"
                 />
-                <a href="{{ route('cajas.index') }}" class="block focus:outline-none">
+                <a href="{{ route('cortes.index', ['estado' => 'pendiente']) }}" class="block focus:outline-none">
                     <x-ui.stat
                         label="Cortes Pendientes"
                         :value="$cortesPendientesCount"

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EstadoCorte;
+use App\Models\Concerns\AccesiblePorCajas;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CorteCaja extends Model
 {
-    use Auditable, HasFactory;
+    use AccesiblePorCajas, Auditable, HasFactory;
 
     protected $table = 'cortes_caja';
 

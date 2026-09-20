@@ -11,6 +11,7 @@ use App\Models\Aportante;
 use App\Models\Caja;
 use App\Models\CatalogoEgreso;
 use App\Models\CatalogoIngreso;
+use App\Models\CorteCaja;
 use App\Models\Departamento;
 use App\Models\Egreso;
 use App\Models\Ingreso;
@@ -19,6 +20,7 @@ use App\Policies\AportantePolicy;
 use App\Policies\CajaPolicy;
 use App\Policies\CatalogoEgresoPolicy;
 use App\Policies\CatalogoIngresoPolicy;
+use App\Policies\CorteCajaPolicy;
 use App\Policies\DepartamentoPolicy;
 use App\Policies\EgresoPolicy;
 use App\Policies\IngresoPolicy;
@@ -67,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Aportante::class, AportantePolicy::class);
         Gate::policy(Ingreso::class, IngresoPolicy::class);
         Gate::policy(Egreso::class, EgresoPolicy::class);
+        Gate::policy(CorteCaja::class, CorteCajaPolicy::class);
 
         // Registro de eventos de autenticación para auditoría (RN-16)
         Event::listen(Login::class, ActualizarUltimoLogin::class);
