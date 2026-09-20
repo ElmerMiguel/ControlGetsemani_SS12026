@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         // 3. Usuario Administrador General
         $this->call(AdminSeeder::class);
 
-        // 4. Datos de demostración (solo en local si SEED_DEMO=true) - Bloque B (P4)
-        // $this->call(DemoSeeder::class);
+        // 4. Datos de demostración (solo en local si SEED_DEMO=true)
+        $this->call(DemoSeeder::class);
     }
 }
