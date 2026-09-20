@@ -31,4 +31,23 @@ class Aportante extends Model
     {
         return $this->hasMany(Ingreso::class, 'aportante_id');
     }
+
+    /**
+     * Accesor para mostrar el CUI enmascarado preservando los últimos 4 dígitos.
+     */
+    public function getCuiEnmascaradoAttribute(): string
+    {
+        if (empty($this->cui_dpi)) {
+            return '—';
+        }
+
+        $cui = preg_replace('/\D/', '', $this->cui_dpi);
+        if (strlen($cui) < 4) {
+            return $this->cui_dpi;
+        }
+
+        $ultimos4 = substr($cui, -4);
+
+        return '•••• •••• • '.$ultimos4;
+    }
 }

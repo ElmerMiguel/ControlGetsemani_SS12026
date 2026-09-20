@@ -70,4 +70,22 @@ class Caja extends Model
     {
         return $this->hasMany(Transferencia::class, 'caja_destino_id');
     }
+
+    public function tesoreros(): BelongsToMany
+    {
+        return $this->usuarios();
+    }
+
+    /**
+     * Determina si la caja ya cuenta con movimientos contables o cortes registrados.
+     * Si es true, saldo_apertura y fecha_apertura son inmutables.
+     */
+    public function tieneMovimientos(): bool
+    {
+        return $this->ingresos()->exists()
+            || $this->egresos()->exists()
+            || $this->cortesCaja()->exists()
+            || $this->transferenciasOrigen()->exists()
+            || $this->transferenciasDestino()->exists();
+    }
 }
