@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\CambiarPasswordController;
+use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsersController;
@@ -29,6 +30,10 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
     Route::resource('usuarios', UsersController::class)
         ->parameters(['usuarios' => 'usuario'])
         ->except(['show', 'destroy']);
+
+    // Bitácora de Auditoría (RN-16) - Solo Lectura
+    Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
+    Route::get('/bitacora/{bitacora}', [BitacoraController::class, 'show'])->name('bitacora.show');
 });
 
 require __DIR__.'/auth.php';
