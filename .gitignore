@@ -1,135 +1,24 @@
-# ----------------------------------
-# Dependencies
-# ----------------------------------
-/vendor/
-/node_modules/
-
-# ----------------------------------
-# Logs
-# ----------------------------------
 *.log
-npm-debug.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log
-yarn-error.log*
-pnpm-debug.log*
-
-# ----------------------------------
-# Environment files
-# ----------------------------------
+.DS_Store
 .env
 .env.backup
 .env.production
-.env.*
-!.env.example
-
-# ----------------------------------
-# Laravel keys
-# ----------------------------------
-storage/*.key
-
-# ----------------------------------
-# Laravel 4 specific (legacy)
-# ----------------------------------
-bootstrap/compiled.php
-app/storage/
-
-# ----------------------------------
-# Laravel 5 & Lumen specific (legacy)
-# ----------------------------------
-public/storage
-public/hot
-
-# ----------------------------------
-# Laravel 5 & Lumen custom public path (legacy)
-# ----------------------------------
-public_html/storage
-public_html/hot
-
-# ----------------------------------
-# Laravel runtime storage
-# ----------------------------------
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/testing/*
-storage/framework/views/*
-storage/pail
-
-# Keep directories
-!storage/logs/.gitignore
-!storage/framework/cache/.gitignore
-!storage/framework/sessions/.gitignore
-!storage/framework/testing/.gitignore
-!storage/framework/views/.gitignore
-
-# ----------------------------------
-# Build assets
-# ----------------------------------
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
 /public/build
 /public/hot
-
-# ----------------------------------
-# Testing
-# ----------------------------------
-.phpunit.result.cache
-.phpunit.cache
-coverage/
-
-# ----------------------------------
-# Package credentials
-# ----------------------------------
-auth.json
-
-# ----------------------------------
-# PHP tools
-# ----------------------------------
-.phpactor.json
-
-# ----------------------------------
-# Laravel Herd / Valet / Homestead
-# ----------------------------------
-Homestead.yaml
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
 Homestead.json
-/.vagrant
-
-# ----------------------------------
-# IDEs
-# ----------------------------------
-.idea/
-.vscode/
-*.code-workspace
-
-# ----------------------------------
-# OS files
-# ----------------------------------
-.DS_Store
+Homestead.yaml
 Thumbs.db
-desktop.ini
-
-# ----------------------------------
-# Temporary files
-# ----------------------------------
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-
-# ----------------------------------
-# Composer
-# ----------------------------------
-composer.phar
-
-# ----------------------------------
-# Frontend caches
-# ----------------------------------
-.eslintcache
-.stylelintcache
-.parcel-cache/
-
-# ----------------------------------
-# Misc
-# ----------------------------------
-.cache/
