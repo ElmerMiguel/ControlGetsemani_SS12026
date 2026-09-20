@@ -3,6 +3,9 @@
 .env
 .env.backup
 .env.production
+.env.testing
+*.xlsx
+/storage/app/imports
 .phpactor.json
 .phpunit.result.cache
 /.fleet
