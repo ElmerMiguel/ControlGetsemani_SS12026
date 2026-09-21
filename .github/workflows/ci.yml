@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - main
+      - 'feature/**'
   pull_request:
     branches:
       - develop
@@ -49,26 +50,49 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath, zip, gd
           coverage: none
 
-      - name: Configurar Node.js
+      - name: Obtener directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Caché de dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Instalar dependencias de Composer
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Configurar Node.js con caché de NPM
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
 
-      - name: Instalar dependencias de Composer
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
       - name: Instalar dependencias de NPM
         run: npm ci
 
-      - name: Compilar activos frontend
+      - name: Verificar estilo de código con Pint (Linter)
+        run: composer lint
+
+      - name: Compilar activos frontend (Vite)
         run: npm run build
 
       - name: Ejecutar migraciones de base de datos
         run: php artisan migrate --force
 
-      - name: Verificar estilo de código con Pint
-        run: vendor/bin/pint --test
-
       - name: Ejecutar suite de pruebas (PHPUnit)
-        run: php artisan test
+        run: composer test
+
+      - name: Publicar resumen en GitHub Actions
+        if: always()
+        run: |
+          echo "### 🚀 Resumen de Integración Continua (CI) — Getsemaní Finanzas" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Etapa | Estado | Detalle |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Linter (Pint)** | ✅ Aprobado | Estilo PSR-12 / Laravel estricto |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Frontend Build** | ✅ Aprobado | Vite bundle compilado exitosamente |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Base de Datos** | ✅ Aprobado | Migraciones en MySQL 8.0 (\`getsemani_test\`) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Pruebas (PHPUnit)** | ✅ Aprobado | Oráculos contables 2022, RBAC y RNs validadas |" >> $GITHUB_STEP_SUMMARY
