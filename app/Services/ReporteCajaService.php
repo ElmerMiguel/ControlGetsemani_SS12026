@@ -42,7 +42,7 @@ class ReporteCajaService
 
         // 1. Cabecera institucional
         $cabecera = [
-            'entidad' => 'Iglesia de Dios Pentecostal del Evangelio Completo "Getsemaní"',
+            'entidad' => 'Iglesia Evangelica "Getsemaní" C.A. Pueblo Nuevo Jucup, SS Coatán Huehuetenango',
             'departamento' => $caja->departamento?->nombre ?? 'Sin departamento',
             'caja' => $caja->nombre,
             'caja_codigo' => $caja->codigo,
