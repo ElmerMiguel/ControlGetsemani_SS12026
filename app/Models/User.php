@@ -63,6 +63,17 @@ class User extends Authenticatable
         return $this->belongsToMany(Caja::class, 'caja_user', 'user_id', 'caja_id');
     }
 
+    public function tieneCaja(Caja|int $caja): bool
+    {
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        $cajaId = $caja instanceof Caja ? $caja->id : $caja;
+
+        return $this->cajas()->where('cajas.id', $cajaId)->exists();
+    }
+
     public function ingresos(): HasMany
     {
         return $this->hasMany(Ingreso::class, 'usuario_id');

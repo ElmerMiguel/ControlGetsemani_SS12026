@@ -14,6 +14,7 @@ use App\Http\Controllers\EgresoController;
 use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
 
@@ -92,6 +93,11 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
     Route::get('/notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
     Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer'])->name('notificaciones.leer');
     Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas'])->name('notificaciones.leer-todas');
+
+    // Reportes Financieros
+    Route::get('/reportes/caja', [ReporteController::class, 'caja'])->name('reportes.caja');
+    Route::get('/reportes/caja/pdf', [ReporteController::class, 'pdf'])->name('reportes.caja.pdf');
+    Route::get('/reportes/caja/xlsx', [ReporteController::class, 'xlsx'])->name('reportes.caja.xlsx');
 });
 
 require __DIR__.'/auth.php';
