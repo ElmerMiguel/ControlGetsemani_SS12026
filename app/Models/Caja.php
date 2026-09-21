@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use App\Enums\MedioCaja;
+use App\Models\Concerns\Auditable;
+use App\Services\CajaService;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Caja extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $table = 'cajas';
 
@@ -68,5 +72,61 @@ class Caja extends Model
     public function transferenciasDestino(): HasMany
     {
         return $this->hasMany(Transferencia::class, 'caja_destino_id');
+    }
+
+    public function tesoreros(): BelongsToMany
+    {
+        return $this->usuarios();
+    }
+
+    /**
+     * Determina si la caja ya cuenta con movimientos contables o cortes registrados.
+     * Si es true, saldo_apertura y fecha_apertura son inmutables.
+     */
+    public function tieneMovimientos(): bool
+    {
+        return $this->ingresos()->exists()
+            || $this->egresos()->exists()
+            || $this->cortesCaja()->exists()
+            || $this->transferenciasOrigen()->exists()
+            || $this->transferenciasDestino()->exists();
+    }
+
+    /**
+     * RN-05: Determina si la fecha indicada se encuentra dentro de un periodo bloqueado.
+     * Existe un corte de esa caja en estado 'pendiente' o 'aprobado' con periodo_inicio <= fecha <= periodo_fin.
+     */
+    public function estaBloqueada($fecha): bool
+    {
+        $f = is_string($fecha) ? Carbon::parse($fecha)->format('Y-m-d') : $fecha->format('Y-m-d');
+
+        return $this->cortesCaja()
+            ->whereIn('estado', ['pendiente', 'aprobado'])
+            ->whereDate('periodo_inicio', '<=', $f)
+            ->whereDate('periodo_fin', '>=', $f)
+            ->exists();
+    }
+
+    /**
+     * RN-02: Saldo actual de una caja = saldo_apertura + sum(ingresos vigentes) - sum(egresos vigentes),
+     * con fecha >= fecha_apertura. Se calcula al consultar; no se guarda.
+     */
+    public function calcularSaldoActual(): string
+    {
+        return app(CajaService::class)->saldoActual($this);
+    }
+
+    /**
+     * RN-15: Scope para limitar consultas a las cajas a las que tiene acceso el usuario.
+     */
+    public function scopeAccesiblesPara(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        return $query->whereHas('usuarios', function ($q) use ($user) {
+            $q->where('users.id', $user->id);
+        });
     }
 }

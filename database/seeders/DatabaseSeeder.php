@@ -20,13 +20,13 @@ class DatabaseSeeder extends Seeder
             EstructuraSeeder::class,
         ]);
 
-        // 2. Roles y permisos (Spatie) - Bloque B (P4)
-        // $this->call(RolesPermisosSeeder::class);
+        // 2. Roles y permisos (Spatie)
+        $this->call(RolesPermisosSeeder::class);
 
-        // 3. Usuario Administrador General - Bloque B (P4)
-        // $this->call(AdminSeeder::class);
+        // 3. Usuario Administrador General
+        $this->call(AdminSeeder::class);
 
-        // 4. Datos de demostración (solo en local si SEED_DEMO=true) - Bloque B (P4)
-        // $this->call(DemoSeeder::class);
+        // 4. Datos de demostración (solo en local si SEED_DEMO=true)
+        $this->call(DemoSeeder::class);
     }
 }

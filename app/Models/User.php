@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use Auditable, HasFactory, HasRoles, Notifiable;
 
     protected $table = 'users';
 
@@ -59,6 +61,17 @@ class User extends Authenticatable
     public function cajas(): BelongsToMany
     {
         return $this->belongsToMany(Caja::class, 'caja_user', 'user_id', 'caja_id');
+    }
+
+    public function tieneCaja(Caja|int $caja): bool
+    {
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        $cajaId = $caja instanceof Caja ? $caja->id : $caja;
+
+        return $this->cajas()->where('cajas.id', $cajaId)->exists();
     }
 
     public function ingresos(): HasMany
