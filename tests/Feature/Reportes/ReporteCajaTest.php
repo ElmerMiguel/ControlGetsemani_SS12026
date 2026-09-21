@@ -247,6 +247,15 @@ class ReporteCajaTest extends TestCase
         $response->assertSee('Caja Juvenil');
     }
 
+    public function test_vista_html_del_reporte_renderiza_correctamente_para_admin_sin_parametros(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('reportes.caja'));
+
+        $response->assertOk();
+        $response->assertSee('Reporte Financiero por Caja');
+    }
+
     public function test_pdf_export_responde_con_content_type_application_pdf(): void
     {
         $response = $this->actingAs($this->tesorero)

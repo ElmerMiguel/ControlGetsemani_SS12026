@@ -32,7 +32,7 @@ class ReporteController extends Controller
         Gate::authorize('reportes.ver');
 
         $user = $request->user();
-        $cajasAccesibles = Caja::accesiblesPara($user)->orderBy('nombre')->get();
+        $cajasAccesibles = Caja::accesiblesPara($user)->with('departamento')->orderBy('nombre')->get();
 
         if ($cajasAccesibles->isEmpty()) {
             abort(403, 'No tiene cajas asignadas para consultar reportes.');
@@ -46,7 +46,7 @@ class ReporteController extends Controller
                 ? ($cajasAccesibles->firstWhere('id', $cajaActivaId) ?? $cajasAccesibles->first())
                 : $cajasAccesibles->first();
         } else {
-            $caja = Caja::where('id', $cajaId)->first();
+            $caja = Caja::with('departamento')->where('id', $cajaId)->first();
             if (! $caja) {
                 abort(404, 'Caja no encontrada.');
             }
@@ -142,7 +142,7 @@ class ReporteController extends Controller
     {
         $cajaId = $request->input('caja_id');
         if (! $cajaId) {
-            $cajasAccesibles = Caja::accesiblesPara($user)->get();
+            $cajasAccesibles = Caja::accesiblesPara($user)->with('departamento')->get();
             $cajaActivaId = $request->session()->get('caja_activa_id');
             $caja = ($cajaActivaId && $cajaActivaId !== 'todas')
                 ? ($cajasAccesibles->firstWhere('id', $cajaActivaId) ?? $cajasAccesibles->first())
@@ -155,7 +155,7 @@ class ReporteController extends Controller
             return $caja;
         }
 
-        $caja = Caja::where('id', $cajaId)->first();
+        $caja = Caja::with('departamento')->where('id', $cajaId)->first();
         if (! $caja) {
             abort(404, 'Caja no encontrada.');
         }

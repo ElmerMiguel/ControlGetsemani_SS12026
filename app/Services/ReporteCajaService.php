@@ -38,6 +38,8 @@ class ReporteCajaService
         $desdeStr = $fechaDesde->format('Y-m-d');
         $hastaStr = $fechaHasta->format('Y-m-d');
 
+        $caja->loadMissing('departamento');
+
         // 1. Cabecera institucional
         $cabecera = [
             'entidad' => 'Iglesia de Dios Pentecostal del Evangelio Completo "Getsemaní"',
