@@ -17,11 +17,9 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # 3. Carga segura de variables de entorno (D3-07 / Prompt P21 §4)
-# Prioridad: Si hay AWS CLI y rol IAM activo en EC2, consulta AWS SSM Parameter Store (/getsemani/*)
 SSM_LOADED=false
 if command -v aws >/dev/null 2>&1; then
     AWS_REGION="${AWS_DEFAULT_REGION:-${AWS_REGION:-us-east-1}}"
-    # Verificar si responde el servicio STS o IMDS
     if aws sts get-caller-identity --region "$AWS_REGION" >/dev/null 2>&1; then
         echo "==> [AWS SSM] Rol IAM detectado. Descargando parámetros desde /getsemani/*..."
         SSM_PARAMS=$(aws ssm get-parameters-by-path --path "/getsemani/" --with-decryption --recursive --region "$AWS_REGION" --query "Parameters[*].[Name,Value]" --output text 2>/dev/null || true)
@@ -75,40 +73,31 @@ if [ ! -L /var/www/html/public/storage ]; then
     php artisan storage:link --force || true
 fi
 
-# 6. Sincronizar directorio public/ a volumen compartido si existe /shared/public
-if [ -d "/shared/public" ]; then
-    cp -ru /var/www/html/public/. /shared/public/ 2>/dev/null || true
+# 6. Manejo seguro y validado de APP_KEY (evita Unsupported cipher)
+if [ -f /var/www/html/.env ]; then
+    CURRENT_KEY=$(grep "^APP_KEY=" /var/www/html/.env | cut -d '=' -f2- | tr -d ' "\r\n' || true)
+    # Si la clave no empieza con base64: o está vacía o es de longitud incorrecta, regenerar
+    case "$CURRENT_KEY" in
+        base64:*)
+            echo "==> [Laravel] APP_KEY válida detectada (base64)."
+            ;;
+        *)
+            echo "==> [Laravel] APP_KEY no válida o ausente. Generando clave criptográfica segura..."
+            php artisan key:generate --force || true
+            ;;
+    esac
 fi
 
-# 7. Manejo seguro de APP_KEY
-if [ -n "$APP_KEY" ]; then
-    echo "==> [Laravel] APP_KEY detectada en variables de entorno."
-    if [ -f /var/www/html/.env ]; then
-        if grep -q "^APP_KEY=" /var/www/html/.env; then
-            sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" /var/www/html/.env 2>/dev/null || true
-        else
-            echo "APP_KEY=${APP_KEY}" >> /var/www/html/.env
-        fi
-    fi
-else
-    if [ -f /var/www/html/.env ] && ! grep -q "^APP_KEY=base64:" /var/www/html/.env; then
-        echo "==> [Laravel] Generando APP_KEY requerida..."
-        php artisan key:generate --force || true
-    fi
-fi
+# 7. Optimización de cachés de Laravel en producción (D3-04)
+echo "==> [Laravel] Optimizando cachés (config, route, view)..."
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
-# 8. Optimización de cachés de Laravel en producción (D3-04)
-if [ -n "$APP_KEY" ] || grep -q "^APP_KEY=base64:" /var/www/html/.env 2>/dev/null; then
-    echo "==> [Laravel] Optimizando cachés (config, route, view)..."
-    php artisan config:cache || true
-    php artisan route:cache || true
-    php artisan view:cache || true
-fi
-
-# 9. Migraciones automáticas en MariaDB para el servicio web
-if [ "$1" = "php-fpm" ]; then
+# 8. Migraciones automáticas en MariaDB para el servicio web
+if [ "$1" = "apache2-foreground" ] || [ "$1" = "php-fpm" ]; then
     echo "==> [Laravel] Esperando a que MariaDB esté disponible para migraciones..."
-    max_tries=10
+    max_tries=15
     tries=0
     while ! php artisan db:monitor >/dev/null 2>&1; do
         tries=$((tries + 1))

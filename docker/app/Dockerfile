@@ -1,7 +1,6 @@
 # ==============================================================================
 # Dockerfile Producción — Sistema de Finanzas e Inventario Iglesia Getsemaní
-# Multi-stage build: Node.js (Vite) + Composer (PHP) + Runtime (PHP 8.2-FPM)
-# Reglas: ARQUITECTURA_FASE3.md §6 | Prompt P21
+# Multi-stage build: Node.js (Vite) + PHP 8.2 Apache (Laravel All-In-One)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -11,70 +10,47 @@ FROM node:20-alpine AS assets_builder
 
 WORKDIR /app
 
-# Copiar archivos de configuración y fuentes requeridos
+# Copiar archivos de dependencias y configuración
 COPY package*.json ./
 COPY vite.config.js postcss.config.js tailwind.config.js ./
 COPY resources resources/
 COPY public public/
 
-# Configurar reintentos robustos ante latencia de red en registry npm
+# Instalar dependencias npm y compilar assets
 RUN npm config set fetch-retries 5 \
     && npm config set fetch-retry-mintimeout 20000 \
     && npm config set fetch-retry-maxtimeout 120000 \
-    && (npm ci && npm run build || (test -f public/build/manifest.json && echo "==> Reutilizando assets compilados en public/build") || exit 1)
+    && npm ci \
+    && npm run build
 
 # ------------------------------------------------------------------------------
-# Etapa 2: Dependencias de Composer (optimizado sin herramientas de desarrollo)
+# Etapa 2: Imagen Final de Producción con PHP 8.2 y Apache
 # ------------------------------------------------------------------------------
-FROM composer:2 AS vendor_builder
-
-WORKDIR /app
-
-COPY composer.json composer.lock ./
-
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --prefer-dist \
-    --no-scripts \
-    --no-autoloader \
-    --ignore-platform-reqs
-
-COPY . .
-
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
-
-# ------------------------------------------------------------------------------
-# Etapa 3: Imagen Final de Producción (PHP 8.2-FPM Alpine)
-# ------------------------------------------------------------------------------
-FROM php:8.2-fpm-alpine
+FROM php:8.2-apache
 
 LABEL maintainer="Elmer Wilson <clave13@seminario.edu>"
-LABEL description="Getsemani Finanzas - Produccion FPM"
+LABEL description="Getsemani Finanzas - Produccion Apache + PHP 8.2"
 
-# Instalar librerías de sistema requeridas para extensiones PHP y AWS CLI
-RUN apk add --no-cache \
+# 1. Instalar librerías de sistema requeridas para extensiones PHP
+RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     curl \
     git \
-    libpng \
+    zip \
+    unzip \
     libpng-dev \
-    libjpeg-turbo \
-    libjpeg-turbo-dev \
-    freetype \
-    freetype-dev \
-    libzip \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     libzip-dev \
-    oniguruma \
-    oniguruma-dev \
-    libxml2 \
+    libonig-dev \
     libxml2-dev \
-    mariadb-client \
-    aws-cli \
+    libicu-dev \
+    default-mysql-client \
     tzdata \
     && cp /usr/share/zoneinfo/America/Guatemala /etc/localtime \
     && echo "America/Guatemala" > /etc/timezone \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure intl \
     && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
         mbstring \
@@ -83,33 +59,45 @@ RUN apk add --no-cache \
         bcmath \
         gd \
         zip \
+        intl \
         opcache \
-    && apk del --no-cache \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
-        libzip-dev \
-        oniguruma-dev \
-        libxml2-dev \
-    && rm -rf /var/cache/apk/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configuraciones de PHP y OPcache para producción
-COPY docker/php/production.ini /usr/local/etc/php/conf.d/99-production.ini
-COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+# 2. Habilitar mod_rewrite de Apache para rutas limpias de Laravel
+RUN a2enmod rewrite headers
 
-# Directorio de trabajo
+# 3. Configurar DocumentRoot de Apache apuntando a /var/www/html/public
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Configurar ServerName y permitir sobrescritura en .htaccess
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf \
+    && sed -i '/<Directory ${APACHE_DOCUMENT_ROOT}>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf 2>/dev/null || true \
+    && echo '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>' > /etc/apache2/conf-available/laravel.conf \
+    && a2enconf laravel
+
+# 4. Instalar Composer oficial
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# 5. Directorio de trabajo
 WORKDIR /var/www/html
 
-# 1. Copiar código del proyecto
+# 6. Copiar código del proyecto
 COPY . /var/www/html
 
-# 2. Copiar dependencias de Composer optimizadas (sin paquetes dev)
-COPY --from=vendor_builder /app/vendor /var/www/html/vendor
-
-# 3. Copiar assets compilados de Vite (sin node_modules en la imagen final)
+# 7. Copiar los assets compilados de Vite desde la Etapa 1
 COPY --from=assets_builder /app/public/build /var/www/html/public/build
 
-# 4. Asegurar estructura de directorios y permisos para www-data
+# 8. Instalar dependencias de Composer optimizadas para producción
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader
+
+# 9. Asegurar estructura de directorios y permisos para www-data
 RUN mkdir -p /var/www/html/storage/app/comprobantes \
              /var/www/html/storage/framework/cache/data \
              /var/www/html/storage/framework/sessions \
@@ -119,13 +107,12 @@ RUN mkdir -p /var/www/html/storage/app/comprobantes \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 5. Configurar script de inicio (entrypoint)
+# 10. Copiar script de entrypoint
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Exponer puerto 9000 para FastCGI (comunicación interna con Nginx)
-EXPOSE 9000
+EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-CMD ["php-fpm"]
+CMD ["apache2-foreground"]
