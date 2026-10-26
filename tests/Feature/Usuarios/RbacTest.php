@@ -26,8 +26,8 @@ class RbacTest extends TestCase
         $adminRole = Role::findByName('admin');
         $tesoreroRole = Role::findByName('tesorero');
 
-        // Admin debe tener todos los permisos registrados (21 base + 5 inventario)
-        $this->assertCount(26, $adminRole->permissions);
+        // Admin debe tener todos los permisos registrados (21 base + 5 inventario + 2 informe general)
+        $this->assertCount(28, $adminRole->permissions);
 
         // Tesorero debe tener exactamente los 18 permisos operativos (13 base + 5 inventario)
         $permisosTesorero = [

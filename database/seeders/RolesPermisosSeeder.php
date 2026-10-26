@@ -46,6 +46,8 @@ class RolesPermisosSeeder extends Seeder
             'inventario.editar',
             'inventario.eliminar',
             'inventario.cambiar_estado',
+            'informe_general.ver',
+            'informe_general.exportar',
         ];
 
         foreach ($permisos as $permiso) {
