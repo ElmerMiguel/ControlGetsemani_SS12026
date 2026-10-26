@@ -6,295 +6,289 @@
     <style>
         @page {
             size: letter portrait;
-            margin: 15mm 15mm 15mm 15mm;
+            margin: 10mm 15mm 10mm 15mm;
+        }
+        * {
+            box-sizing: border-box;
         }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 9pt;
-            color: #1e293b;
-            line-height: 1.4;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 8.5pt;
+            color: #111;
+            line-height: 1.3;
             margin: 0;
             padding: 0;
         }
-        .container {
-            border: 2px solid #0284c7;
-            border-radius: 8px;
-            padding: 20px;
+        .receipt-container {
+            border: 1.5px solid #111;
+            padding: 14px 18px;
             position: relative;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #0284c7;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-        .header h1 {
-            font-size: 13pt;
-            margin: 0;
-            color: #0f172a;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .header h2 {
-            font-size: 10pt;
-            margin: 3px 0;
-            color: #0284c7;
-            font-weight: 600;
-        }
-        .header p {
-            margin: 0;
-            font-size: 8pt;
-            color: #64748b;
-        }
-        .anulado-banner {
-            background-color: #fee2e2;
-            border: 2px solid #dc2626;
-            color: #991b1b;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 10pt;
+            page-break-inside: avoid;
         }
         .anulado-watermark {
             position: absolute;
-            top: 35%;
-            left: 15%;
-            transform: rotate(-30deg);
-            font-size: 65pt;
-            color: rgba(220, 38, 38, 0.22);
+            top: 40%;
+            left: 12%;
+            transform: rotate(-25deg);
+            font-size: 55pt;
+            color: rgba(0, 0, 0, 0.12);
             font-weight: bold;
-            letter-spacing: 10px;
+            letter-spacing: 8px;
             z-index: 1000;
             pointer-events: none;
         }
-        .meta-box {
+        .anulado-box {
+            border: 1.5px solid #111;
+            padding: 5px 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 8pt;
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        table.header-table {
             width: 100%;
-            margin-bottom: 16px;
             border-collapse: collapse;
+            border-bottom: 1.5px solid #111;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
         }
-        .meta-box td {
-            vertical-align: top;
-            padding: 4px;
+        table.header-table td {
+            vertical-align: middle;
         }
-        .folio-box {
-            border: 1px solid #cbd5e1;
-            background-color: #f8fafc;
-            border-radius: 6px;
-            padding: 8px 12px;
-            text-align: right;
-            width: 45%;
+        .church-name {
+            font-size: 10pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+        .church-temple {
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 2px 0 0 0;
+        }
+        .church-subtitle {
+            font-size: 7.5pt;
+            color: #444;
+            margin: 1px 0 0 0;
+        }
+        .receipt-folio-box {
+            border: 1.5px solid #111;
+            padding: 6px 10px;
+            text-align: center;
+            background-color: #fff;
         }
         .folio-title {
-            font-size: 8pt;
-            text-transform: uppercase;
-            color: #64748b;
+            font-size: 7.5pt;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .folio-number {
-            font-size: 13pt;
-            color: #0284c7;
+            font-size: 12pt;
             font-weight: bold;
+            font-family: monospace;
+            margin: 2px 0;
         }
-        .section-title {
-            font-size: 9.5pt;
-            font-weight: bold;
-            color: #0f172a;
-            background-color: #f1f5f9;
-            padding: 5px 8px;
-            border-left: 4px solid #0284c7;
-            margin-top: 14px;
+        .folio-date {
+            font-size: 7.5pt;
+            color: #333;
+        }
+        .receipt-body {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
             margin-bottom: 10px;
-            text-transform: uppercase;
         }
-        table.data-table {
+        .receipt-body td {
+            padding: 4px 6px;
+            vertical-align: top;
+            font-size: 8.5pt;
+        }
+        .receipt-body tr.border-bottom td {
+            border-bottom: 1px dotted #666;
+        }
+        .td-label {
+            width: 25%;
+            font-weight: bold;
+            color: #222;
+            text-transform: uppercase;
+            font-size: 7.5pt;
+        }
+        .td-value {
+            width: 75%;
+            color: #000;
+        }
+        .monto-highlight {
+            width: 100%;
+            border: 1.5px solid #111;
+            padding: 8px 12px;
+            margin: 8px 0 12px 0;
+            background-color: #fafafa;
+        }
+        .monto-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
         }
-        table.data-table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 9pt;
+        .monto-table td {
+            vertical-align: middle;
         }
-        .label {
-            width: 28%;
-            font-weight: bold;
-            color: #475569;
-        }
-        .val {
-            width: 72%;
-            color: #0f172a;
-        }
-        .monto-box {
-            margin: 18px 0;
-            background-color: #f0fdf4;
-            border: 1.5px solid #16a34a;
-            border-radius: 6px;
-            padding: 12px 16px;
-            text-align: center;
-        }
-        .monto-label {
-            font-size: 9pt;
-            color: #166534;
+        .monto-title {
+            font-size: 8pt;
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            color: #333;
         }
-        .monto-val {
-            font-size: 18pt;
-            color: #15803d;
+        .monto-amount {
+            font-size: 15pt;
             font-weight: bold;
+            font-family: monospace;
+            text-align: right;
+            color: #000;
         }
-        .firmas-table {
+        table.firmas {
             width: 100%;
-            margin-top: 45px;
             border-collapse: collapse;
+            margin-top: 25px;
+            margin-bottom: 8px;
         }
-        .firmas-table td {
+        table.firmas td {
             width: 50%;
             text-align: center;
             vertical-align: bottom;
-            padding: 0 25px;
+            padding: 0 20px;
         }
         .linea-firma {
-            border-top: 1px solid #334155;
-            margin-bottom: 6px;
+            border-top: 1px solid #111;
+            margin-bottom: 4px;
         }
-        .firma-label {
+        .nombre-firmante {
             font-size: 8pt;
-            color: #475569;
-        }
-        .firma-nombre {
             font-weight: bold;
-            color: #0f172a;
-            font-size: 8.5pt;
         }
-        .footer {
-            margin-top: 30px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 8px;
+        .cargo-firmante {
+            font-size: 7pt;
+            color: #444;
+            text-transform: uppercase;
+        }
+        .footer-note {
+            border-top: 1px solid #ccc;
+            padding-top: 6px;
+            margin-top: 8px;
             text-align: center;
-            font-size: 7.5pt;
-            color: #94a3b8;
+            font-size: 7pt;
+            color: #555;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="receipt-container">
         @if ($ingreso->trashed())
             <div class="anulado-watermark">ANULADO</div>
-            <div class="anulado-banner">
-                DOCUMENTO ANULADO<br>
-                <span style="font-size: 8pt; font-weight: normal;">
-                    Fecha de anulación: {{ $ingreso->deleted_at?->format('d/m/Y H:i') }} | Motivo: {{ $ingreso->motivo_anulacion ?? 'Sin motivo especificado' }}
-                </span>
+            <div class="anulado-box">
+                *** DOCUMENTO ANULADO *** &mdash; 
+                Anulado el {{ $ingreso->deleted_at?->format('d/m/Y H:i') }} &bull; Motivo: {{ $ingreso->motivo_anulacion ?? 'Sin motivo' }}
             </div>
         @endif
 
-        <div class="header">
-            <h1>Iglesia Evangélica Nacional Presbiteriana de Guatemala</h1>
-            <h2>TEMPLO "GETSEMANÍ"</h2>
-            <p>Sistema Institucional de Tesorería, Finanzas y Control Contable</p>
-        </div>
-
-        <table class="meta-box">
+        <table class="header-table">
             <tr>
-                <td style="width: 55%; vertical-align: middle;">
-                    <div style="font-size: 11pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
-                        Comprobante de Donación
-                    </div>
-                    <div style="font-size: 8pt; color: #64748b; margin-top: 2px;">
-                        Comprobante formal para fines eclesiales y contables
-                    </div>
+                <td style="width: 65%;">
+                    <div class="church-name">Iglesia Evangélica Nacional Presbiteriana de Guatemala</div>
+                    <div class="church-temple">TEMPLO "GETSEMANÍ"</div>
+                    <div class="church-subtitle">Sistema Institucional de Tesorería y Control Financiero</div>
                 </td>
-                <td style="width: 45%;">
-                    <div class="folio-box">
-                        <div class="folio-title">Número de Comprobante</div>
+                <td style="width: 35%;">
+                    <div class="receipt-folio-box">
+                        <div class="folio-title">Comprobante de Donación</div>
                         <div class="folio-number">{{ $comprobante->numero }}</div>
-                        <div style="font-size: 7.5pt; color: #64748b; margin-top: 3px;">
-                            Emisión: {{ $comprobante->generado_en?->format('d/m/Y H:i') }}
-                        </div>
+                        <div class="folio-date">Fecha: {{ $comprobante->generado_en?->format('d/m/Y') }}</div>
                     </div>
                 </td>
             </tr>
         </table>
 
-        <div class="section-title">1. Datos del Aportante</div>
-        <table class="data-table">
-            <tr>
-                <td class="label">Hermano(a) / Donante:</td>
-                <td class="val"><strong>{{ $aportante->nombre_completo }}</strong></td>
+        <table class="receipt-body">
+            <tr class="border-bottom">
+                <td class="td-label">Recibí de:</td>
+                <td class="td-value"><strong>{{ $aportante->nombre_completo }}</strong></td>
             </tr>
-            <tr>
-                <td class="label">Identificación (CUI / DPI):</td>
-                <td class="val">{{ $aportante->cui_enmascarado }}</td>
+            <tr class="border-bottom">
+                <td class="td-label">Identificación:</td>
+                <td class="td-value">
+                    CUI/DPI: {{ $aportante->cui_enmascarado }}
+                    @if (!empty($aportante->telefono))
+                        &nbsp;&bull;&nbsp; Tel: {{ $aportante->telefono }}
+                    @endif
+                    @if (!empty($aportante->correo))
+                        &nbsp;&bull;&nbsp; {{ $aportante->correo }}
+                    @endif
+                </td>
             </tr>
-            @if (!empty($aportante->correo) || !empty($aportante->telefono))
-                <tr>
-                    <td class="label">Contacto:</td>
-                    <td class="val">
-                        {{ $aportante->correo ?? 'Sin correo' }}
-                        @if (!empty($aportante->telefono))
-                            | Tel: {{ $aportante->telefono }}
-                        @endif
-                    </td>
-                </tr>
-            @endif
-        </table>
-
-        <div class="section-title">2. Detalle de la Aportación</div>
-        <table class="data-table">
-            <tr>
-                <td class="label">Fecha de Recepción:</td>
-                <td class="val">{{ $ingreso->fecha?->format('d/m/Y') }}</td>
+            <tr class="border-bottom">
+                <td class="td-label">Por Concepto de:</td>
+                <td class="td-value">
+                    <strong>{{ $ingreso->cuenta?->nombre ?? 'Ingreso' }}</strong>
+                    @if (!empty($ingreso->cuenta?->codigo))
+                        ({{ $ingreso->cuenta->codigo }})
+                    @endif
+                </td>
             </tr>
-            <tr>
-                <td class="label">Caja Receptora:</td>
-                <td class="val">{{ $ingreso->caja?->nombre ?? '—' }}</td>
+            <tr class="border-bottom">
+                <td class="td-label">Caja Receptora:</td>
+                <td class="td-value">
+                    {{ $ingreso->caja?->nombre ?? 'Caja General' }}
+                    @if (!empty($ingreso->caja?->codigo))
+                        ({{ $ingreso->caja->codigo }})
+                    @endif
+                </td>
             </tr>
-            <tr>
-                <td class="label">Cuenta de Ingreso:</td>
-                <td class="val">{{ $ingreso->cuenta?->nombre ?? '—' }} ({{ $ingreso->cuenta?->codigo ?? '' }})</td>
+            <tr class="border-bottom">
+                <td class="td-label">Fecha de Ingreso:</td>
+                <td class="td-value">{{ $ingreso->fecha?->format('d/m/Y') }}</td>
             </tr>
             @if (!empty($ingreso->recibo))
-                <tr>
-                    <td class="label">Recibo Manual de Ref.:</td>
-                    <td class="val">{{ $ingreso->recibo }}</td>
+                <tr class="border-bottom">
+                    <td class="td-label">Recibo Manual No.:</td>
+                    <td class="td-value font-mono">{{ $ingreso->recibo }}</td>
                 </tr>
             @endif
             @if (!empty($ingreso->observaciones))
-                <tr>
-                    <td class="label">Observaciones:</td>
-                    <td class="val">{{ $ingreso->observaciones }}</td>
+                <tr class="border-bottom">
+                    <td class="td-label">Observaciones:</td>
+                    <td class="td-value">{{ $ingreso->observaciones }}</td>
                 </tr>
             @endif
         </table>
 
-        <div class="monto-box">
-            <div class="monto-label">Monto Aportado</div>
-            <div class="monto-val">{{ formato_moneda($ingreso->monto) }}</div>
+        <div class="monto-highlight">
+            <table class="monto-table">
+                <tr>
+                    <td class="monto-title">Total Aportado:</td>
+                    <td class="monto-amount">{{ formato_moneda($ingreso->monto) }}</td>
+                </tr>
+            </table>
         </div>
 
-        <table class="firmas-table">
+        <table class="firmas">
             <tr>
                 <td>
                     <div class="linea-firma"></div>
-                    <div class="firma-nombre">{{ $aportante->nombre_completo }}</div>
-                    <div class="firma-label">Donante / Aportante</div>
+                    <div class="nombre-firmante">{{ $aportante->nombre_completo }}</div>
+                    <div class="cargo-firmante">Donante / Aportante</div>
                 </td>
                 <td>
                     <div class="linea-firma"></div>
-                    <div class="firma-nombre">{{ $comprobante->generador?->name ?? 'Tesorero(a) Responsable' }}</div>
-                    <div class="firma-label">Por Iglesia Getsemaní (Tesorero / Receptor)</div>
+                    <div class="nombre-firmante">{{ $comprobante->generador?->name ?? 'Tesorero(a) Responsable' }}</div>
+                    <div class="cargo-firmante">Tesorero(a) &bull; Iglesia Getsemaní</div>
                 </td>
             </tr>
         </table>
 
-        <div class="footer">
+        <div class="footer-note">
             "Cada uno dé como propuso en su corazón: no con tristeza, ni por necesidad, porque Dios ama al dador alegre." 2 Corintios 9:7<br>
-            Comprobante emitido automáticamente por el Sistema de Gestión Financiera · Documento ID #{{ $comprobante->id }} · {{ now()->format('d/m/Y H:i:s') }}
+            Comprobante oficial para control eclesiástico interno &bull; Doc ID #{{ $comprobante->id }} &bull; Emisión: {{ $comprobante->generado_en?->format('d/m/Y H:i') }}
         </div>
     </div>
 </body>
