@@ -16,7 +16,26 @@
         </div>
     </x-slot>
 
-    <div class="space-y-6">
+    <div
+        x-data="{
+            modalEstado: false,
+            modalBaja: false,
+            bienActual: null,
+            formActionEstado: '',
+            formActionBaja: '',
+            abrirEstado(bien, actionUrl) {
+                this.bienActual = bien;
+                this.formActionEstado = actionUrl;
+                this.modalEstado = true;
+            },
+            abrirBaja(bien, actionUrl) {
+                this.bienActual = bien;
+                this.formActionBaja = actionUrl;
+                this.modalBaja = true;
+            }
+        }"
+        class="space-y-6"
+    >
         <!-- Resumen de Métricas de Inventario -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <x-ui.stat
@@ -142,63 +161,35 @@
                                         </x-ui.badge>
                                     </td>
                                     <td class="py-3 px-4 text-right font-mono text-slate-700">
-                                        {{ $bien->valor_estimado ? 'Q ' . number_format($bien->valor_estimado, 2) : '—' }}
+                                        {{ $bien->valor_estimado ? formato_moneda($bien->valor_estimado) : '—' }}
                                     </td>
                                     <td class="py-3 px-4 text-slate-600">
                                         {{ $bien->fecha_registro->format('d/m/Y') }}
                                     </td>
                                     <td class="py-3 px-4 text-right">
-                                        <div class="flex items-center justify-end gap-2" x-data="{ openEstado: false, openBaja: false }">
+                                        <div class="flex items-center justify-end gap-2">
                                             @can('inventario.cambiar_estado')
                                                 <button
                                                     type="button"
-                                                    @click="openEstado = true"
+                                                    @click="abrirEstado({
+                                                        id: {{ $bien->id }},
+                                                        codigo: '{{ addslashes($bien->codigo) }}',
+                                                        nombre: '{{ addslashes($bien->nombre) }}',
+                                                        departamento: '{{ addslashes($bien->departamento->nombre) }}',
+                                                        estado: '{{ $bien->estado->value }}'
+                                                    }, '{{ route('inventario.estado', $bien) }}')"
                                                     title="Cambiar estado"
-                                                    class="text-xs text-amber-600 hover:text-amber-800 font-medium"
+                                                    class="inline-flex items-center px-2 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-semibold transition"
                                                 >
                                                     Estado
                                                 </button>
-
-                                                <!-- Modal Cambiar Estado -->
-                                                <div
-                                                    x-show="openEstado"
-                                                    class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 flex items-center justify-center p-4 text-left"
-                                                    x-cloak
-                                                >
-                                                    <div @click.away="openEstado = false" class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-                                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Cambiar Estado: {{ $bien->codigo }}</h3>
-                                                        <p class="text-xs text-slate-500 mb-4">{{ $bien->nombre }} ({{ $bien->departamento->nombre }})</p>
-
-                                                        <form method="POST" action="{{ route('inventario.estado', $bien) }}">
-                                                            @csrf
-                                                            @method('PATCH')
-                                                            <div class="space-y-4">
-                                                                <div>
-                                                                    <label class="block text-xs font-medium text-slate-700 mb-1">Nuevo Estado</label>
-                                                                    <select name="estado" required class="w-full text-sm rounded-lg border-slate-300">
-                                                                        @foreach ($estados as $est)
-                                                                            <option value="{{ $est->value }}" @selected($bien->estado->value === $est->value)>
-                                                                                {{ $est->label() }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-                                                                <div>
-                                                                    <label class="block text-xs font-medium text-slate-700 mb-1">Motivo del Cambio (para auditoría)</label>
-                                                                    <textarea name="motivo" rows="3" required placeholder="Explica la razón del cambio de estado..." class="w-full text-sm rounded-lg border-slate-300"></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="mt-6 flex justify-end gap-2">
-                                                                <x-ui.button type="button" variant="secondary" @click="openEstado = false">Cancelar</x-ui.button>
-                                                                <x-ui.button type="submit" variant="primary">Guardar Cambio</x-ui.button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
                                             @endcan
 
                                             @can('inventario.editar')
-                                                <a href="{{ route('inventario.edit', $bien) }}" class="text-xs text-primary-600 hover:text-primary-800 font-medium">
+                                                <a
+                                                    href="{{ route('inventario.edit', $bien) }}"
+                                                    class="inline-flex items-center px-2 py-1 rounded bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
+                                                >
                                                     Editar
                                                 </a>
                                             @endcan
@@ -206,36 +197,15 @@
                                             @can('inventario.eliminar')
                                                 <button
                                                     type="button"
-                                                    @click="openBaja = true"
-                                                    class="text-xs text-rose-600 hover:text-rose-800 font-medium"
+                                                    @click="abrirBaja({
+                                                        id: {{ $bien->id }},
+                                                        codigo: '{{ addslashes($bien->codigo) }}',
+                                                        nombre: '{{ addslashes($bien->nombre) }}'
+                                                    }, '{{ route('inventario.destroy', $bien) }}')"
+                                                    class="inline-flex items-center px-2 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition"
                                                 >
                                                     Baja
                                                 </button>
-
-                                                <!-- Modal Dar de Baja (SoftDelete con Motivo) -->
-                                                <div
-                                                    x-show="openBaja"
-                                                    class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 flex items-center justify-center p-4 text-left"
-                                                    x-cloak
-                                                >
-                                                    <div @click.away="openBaja = false" class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-                                                        <h3 class="text-lg font-bold text-rose-900 mb-2">Dar de Baja: {{ $bien->codigo }}</h3>
-                                                        <p class="text-xs text-slate-500 mb-4">RN3-01: El bien no se eliminará físicamente; se registrará su anulación y motivo en bitácora.</p>
-
-                                                        <form method="POST" action="{{ route('inventario.destroy', $bien) }}">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-slate-700 mb-1">Motivo de Baja / Anulación</label>
-                                                                <textarea name="motivo" rows="3" required placeholder="Ej. Pérdida irreparable, robo o destrucción..." class="w-full text-sm rounded-lg border-slate-300"></textarea>
-                                                            </div>
-                                                            <div class="mt-6 flex justify-end gap-2">
-                                                                <x-ui.button type="button" variant="secondary" @click="openBaja = false">Cancelar</x-ui.button>
-                                                                <x-ui.button type="submit" variant="danger">Confirmar Baja</x-ui.button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
                                             @endcan
                                         </div>
                                     </td>
@@ -249,5 +219,130 @@
                 </div>
             @endif
         </x-ui.card>
+
+        <!-- ==================== MODAL GLOBAL: CAMBIAR ESTADO ==================== -->
+        <div
+            x-show="modalEstado"
+            x-cloak
+            class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+        >
+            <div @click.away="modalEstado = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-left">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">
+                        Cambiar Estado: <span class="font-mono text-primary-600" x-text="bienActual?.codigo"></span>
+                    </h3>
+                    <button type="button" @click="modalEstado = false" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <p class="text-xs text-slate-500 mb-4">
+                    Bien: <strong class="text-slate-800" x-text="bienActual?.nombre"></strong> &bull; Departamento: <span x-text="bienActual?.departamento"></span>
+                </p>
+
+                <form method="POST" :action="formActionEstado">
+                    @csrf
+                    @method('PATCH')
+                    <div class="space-y-4">
+                        <div>
+                            <label for="nuevo_estado" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                                Nuevo Estado <span class="text-rose-500">*</span>
+                            </label>
+                            <select
+                                name="estado"
+                                id="nuevo_estado"
+                                required
+                                x-model="bienActual.estado"
+                                class="w-full text-sm rounded-lg border-slate-300 focus:border-primary-500 focus:ring-primary-500"
+                            >
+                                @foreach ($estados as $est)
+                                    <option value="{{ $est->value }}">
+                                        {{ $est->label() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="motivo_cambio" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                                Motivo del Cambio <span class="text-rose-500">* (mínimo 5 caracteres para auditoría)</span>
+                            </label>
+                            <textarea
+                                name="motivo"
+                                id="motivo_cambio"
+                                rows="3"
+                                required
+                                minlength="5"
+                                placeholder="Explica detalladamente la causa del cambio de estado físico..."
+                                class="w-full text-sm rounded-lg border-slate-300 focus:border-primary-500 focus:ring-primary-500"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                        <x-ui.button type="button" variant="secondary" @click="modalEstado = false">
+                            Cancelar
+                        </x-ui.button>
+                        <x-ui.button type="submit" variant="primary">
+                            Guardar Cambio
+                        </x-ui.button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== MODAL GLOBAL: DAR DE BAJA (RN3-01) ==================== -->
+        <div
+            x-show="modalBaja"
+            x-cloak
+            class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+        >
+            <div @click.away="modalBaja = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-left">
+                <div class="flex items-center justify-between pb-3 border-b border-rose-100 mb-4">
+                    <h3 class="text-lg font-bold text-rose-900">
+                        Dar de Baja Bien: <span class="font-mono text-rose-700" x-text="bienActual?.codigo"></span>
+                    </h3>
+                    <button type="button" @click="modalBaja = false" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 mb-4">
+                    <strong>Regla RN3-01:</strong> El bien no será eliminado físicamente de la base de datos para preservar la trazabilidad histórica de auditoría. Se aplicará baja lógica (SoftDelete) con el motivo especificado.
+                </div>
+
+                <form method="POST" :action="formActionBaja">
+                    @csrf
+                    @method('DELETE')
+                    <div>
+                        <label for="motivo_baja" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                            Motivo de Baja / Anulación <span class="text-rose-500">* (mínimo 5 caracteres)</span>
+                        </label>
+                        <textarea
+                            name="motivo"
+                            id="motivo_baja"
+                            rows="3"
+                            required
+                            minlength="5"
+                            placeholder="Ej. Pérdida irreparable, robo, o destrucción física..."
+                            class="w-full text-sm rounded-lg border-slate-300 focus:border-rose-500 focus:ring-rose-500"
+                        ></textarea>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                        <x-ui.button type="button" variant="secondary" @click="modalBaja = false">
+                            Cancelar
+                        </x-ui.button>
+                        <x-ui.button type="submit" variant="danger">
+                            Confirmar Baja
+                        </x-ui.button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </x-app-layout>
