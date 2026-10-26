@@ -1,6 +1,6 @@
 # ==============================================================================
 # Docker Compose de Producción — Sistema de Finanzas e Inventario Iglesia Getsemaní
-# Configuración Optimizada para Despliegues en Servidor / Coolify
+# Arquitectura Simplificada Apache + MariaDB (Ideal para Coolify / VPS)
 # ==============================================================================
 
 services:
@@ -11,6 +11,10 @@ services:
     image: getsemani-app:prod
     container_name: getsemani_prod_app
     restart: unless-stopped
+    ports:
+      - "80"
+    expose:
+      - "80"
     env_file:
       - path: .env
         required: false
@@ -30,40 +34,15 @@ services:
       - QUEUE_CONNECTION=database
     volumes:
       - storage_data:/var/www/html/storage/app
-      - app_public:/var/www/html/public
     depends_on:
       mariadb:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "php artisan --version || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost/up || php artisan --version || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 20s
-    networks:
-      - getsemani_prod_net
-
-  nginx:
-    build:
-      context: .
-      dockerfile: docker/nginx/Dockerfile
-    image: getsemani-nginx:prod
-    container_name: getsemani_prod_nginx
-    restart: unless-stopped
-    expose:
-      - "80"
-    environment:
-      DOMAIN: ${DOMAIN:-controlgetse.12345611.xyz}
-      REDIRECT_TO_HTTPS: "false"
-    volumes:
-      - app_public:/var/www/html/public:ro
-    depends_on:
-      app:
-        condition: service_healthy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.getsemani.rule=Host(`${DOMAIN:-controlgetse.12345611.xyz}`)"
-      - "traefik.http.services.getsemani.loadbalancer.server.port=80"
+      start_period: 25s
     networks:
       - getsemani_prod_net
 
@@ -126,8 +105,6 @@ volumes:
   mariadb_data:
     driver: local
   storage_data:
-    driver: local
-  app_public:
     driver: local
 
 networks:
