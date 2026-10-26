@@ -22,7 +22,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
+Route::middleware(['auth', 'activo', 'password.cambiado', 'prevent.back'])->group(function () {
     // Cambio forzado de contraseña temporal
     Route::get('/cambiar-password', [CambiarPasswordController::class, 'show'])->name('password.cambiar');
     Route::post('/cambiar-password', [CambiarPasswordController::class, 'update'])->name('password.cambiar.update');
