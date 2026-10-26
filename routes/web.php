@@ -12,6 +12,7 @@ use App\Http\Controllers\CorteCajaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\EgresoController;
+use App\Http\Controllers\InformeGeneralController;
 use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NotificacionController;
@@ -107,6 +108,11 @@ Route::middleware(['auth', 'activo', 'password.cambiado', 'prevent.back'])->grou
     // Inventario Institucional (RF-09 · P17)
     Route::patch('/inventario/{inventario}/estado', [InventarioController::class, 'cambiarEstado'])->name('inventario.estado');
     Route::resource('inventario', InventarioController::class)->except(['show']);
+
+    // Informe General de Asamblea (RF-07, RN3-03, RN3-04 · P19)
+    Route::get('/informe-general', [InformeGeneralController::class, 'index'])->name('informe_general.index');
+    Route::get('/informe-general/pdf', [InformeGeneralController::class, 'pdf'])->name('informe_general.pdf');
+    Route::get('/informe-general/xlsx', [InformeGeneralController::class, 'xlsx'])->name('informe_general.xlsx');
 });
 
 require __DIR__.'/auth.php';
