@@ -7,6 +7,7 @@ use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ingreso extends Model
@@ -65,6 +66,11 @@ class Ingreso extends Model
     public function anulador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'anulado_por');
+    }
+
+    public function comprobante(): HasOne
+    {
+        return $this->hasOne(ComprobanteDonacion::class, 'ingreso_id');
     }
 
     /**

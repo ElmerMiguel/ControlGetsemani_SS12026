@@ -16,7 +16,7 @@
         </div>
     </x-slot>
 
-    <div class="space-y-6" x-data="{ anularModalOpen: false, anularAction: '', anularId: '' }">
+    <div class="space-y-6" x-data="{ anularModalOpen: false, anularAction: '', anularId: '', enviarModalOpen: false, enviarAction: '', comprobanteNumero: '', correoDestino: '' }">
         <!-- Filtros y Búsqueda -->
         <x-ui.card>
             <form method="GET" action="{{ route('ingresos.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -174,9 +174,47 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" title="Motivo: {{ $ingreso->motivo_anulacion }}">
                                     Anulado
                                 </span>
+                                @if ($ingreso->comprobante)
+                                    <a href="{{ route('comprobantes.descargar', $ingreso->comprobante) }}" title="Descargar comprobante anulado" class="text-xs font-medium text-slate-500 hover:text-slate-700 underline">
+                                        PDF Anulado
+                                    </a>
+                                @endif
                             @elseif ($estaBloqueado)
                                 <span class="text-xs text-slate-400 italic">Bloqueado</span>
+                                @if ($ingreso->comprobante)
+                                    <a href="{{ route('comprobantes.descargar', $ingreso->comprobante) }}" title="Descargar comprobante {{ $ingreso->comprobante->numero }}" class="inline-flex items-center text-xs font-semibold text-sky-600 hover:text-sky-800">
+                                        PDF
+                                    </a>
+                                @elseif ($ingreso->aportante_id)
+                                    <form action="{{ route('ingresos.comprobante.generar', $ingreso) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-xs font-medium text-emerald-600 hover:text-emerald-800" title="Emitir comprobante formal en PDF">
+                                            Comprobante
+                                        </button>
+                                    </form>
+                                @endif
                             @else
+                                @if ($ingreso->comprobante)
+                                    <a href="{{ route('comprobantes.descargar', $ingreso->comprobante) }}" title="Descargar comprobante {{ $ingreso->comprobante->numero }}" class="inline-flex items-center text-xs font-semibold text-sky-600 hover:text-sky-800">
+                                        PDF
+                                    </a>
+                                    <button
+                                        type="button"
+                                        @click="enviarModalOpen = true; comprobanteNumero = '{{ $ingreso->comprobante->numero }}'; correoDestino = '{{ $ingreso->aportante?->correo ?? '' }}'; enviarAction = '{{ route('comprobantes.enviar', $ingreso->comprobante) }}'"
+                                        class="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                        title="Enviar comprobante por correo"
+                                    >
+                                        Enviar
+                                    </button>
+                                @elseif ($ingreso->aportante_id)
+                                    <form action="{{ route('ingresos.comprobante.generar', $ingreso) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-xs font-medium text-emerald-600 hover:text-emerald-800" title="Emitir comprobante formal en PDF">
+                                            Comprobante
+                                        </button>
+                                    </form>
+                                @endif
+
                                 @can('update', $ingreso)
                                     <a href="{{ route('ingresos.edit', $ingreso) }}" class="text-xs font-medium text-primary-600 hover:text-primary-800">
                                         Editar
@@ -279,6 +317,70 @@
                                 class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 shadow-sm"
                             >
                                 Confirmar Anulación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Modal de Envío de Comprobante por Correo (RF-14) -->
+        <div
+            x-show="enviarModalOpen"
+            class="fixed inset-0 z-50 overflow-y-auto"
+            style="display: none;"
+        >
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="enviarModalOpen" x-transition.opacity class="fixed inset-0 bg-slate-900 bg-opacity-60"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                <div
+                    x-show="enviarModalOpen"
+                    x-transition
+                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6 space-y-4"
+                >
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Enviar Comprobante por Correo</h3>
+                            <p class="text-xs text-slate-500">Se adjuntará el archivo PDF del comprobante formal <span class="font-bold text-indigo-600" x-text="comprobanteNumero"></span>.</p>
+                        </div>
+                    </div>
+
+                    <form :action="enviarAction" method="POST" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label for="correo" class="block text-sm font-medium text-slate-700 mb-1">
+                                Correo Electrónico del Destinatario *
+                            </label>
+                            <input
+                                type="email"
+                                name="correo"
+                                id="correo"
+                                required
+                                x-model="correoDestino"
+                                placeholder="ejemplo@correo.com"
+                                class="w-full text-sm rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                            <p class="mt-1 text-xs text-slate-500">Puedes verificar o editar la dirección de correo antes del envío.</p>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                            <button
+                                type="button"
+                                @click="enviarModalOpen = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-sm"
+                            >
+                                Enviar Comprobante
                             </button>
                         </div>
                     </form>

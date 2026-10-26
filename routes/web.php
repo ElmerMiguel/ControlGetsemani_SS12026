@@ -7,6 +7,7 @@ use App\Http\Controllers\CajaActivaController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CatalogoEgresoController;
 use App\Http\Controllers\CatalogoIngresoController;
+use App\Http\Controllers\ComprobanteDonacionController;
 use App\Http\Controllers\CorteCajaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
@@ -73,6 +74,9 @@ Route::middleware(['auth', 'activo', 'password.cambiado', 'prevent.back'])->grou
 
     // Ingresos Contables (RN-01..RN-07)
     Route::post('/ingresos/{ingreso}/anular', [IngresoController::class, 'anular'])->name('ingresos.anular');
+    Route::post('/ingresos/{ingreso}/comprobante', [ComprobanteDonacionController::class, 'generar'])->name('ingresos.comprobante.generar');
+    Route::get('/comprobantes/{comprobante}/descargar', [ComprobanteDonacionController::class, 'descargar'])->name('comprobantes.descargar');
+    Route::post('/comprobantes/{comprobante}/enviar', [ComprobanteDonacionController::class, 'enviar'])->name('comprobantes.enviar');
     Route::resource('ingresos', IngresoController::class)->except(['show', 'destroy']);
 
     // Egresos Contables (RN-01..RN-07, RN-10)

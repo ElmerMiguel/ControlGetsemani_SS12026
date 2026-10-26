@@ -77,7 +77,10 @@
                             {{ $aportante->cui_enmascarado }}
                         </td>
                         <td class="px-6 py-4 text-sm text-slate-600">
-                            {{ $aportante->telefono ?? '—' }}
+                            <div>{{ $aportante->telefono ?? '—' }}</div>
+                            @if ($aportante->correo)
+                                <div class="text-xs text-slate-500">{{ $aportante->correo }}</div>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             @if ($aportante->activo)

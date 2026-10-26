@@ -33,7 +33,7 @@ class IngresoController extends Controller
 
         $user = $request->user();
         $query = Ingreso::query()
-            ->with(['caja', 'cuenta', 'aportante', 'usuario'])
+            ->with(['caja', 'cuenta', 'aportante', 'usuario', 'comprobante'])
             ->accesiblesPara($user);
 
         // Filtro de anulados exclusivo para administrador
