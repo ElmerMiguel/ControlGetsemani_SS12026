@@ -44,44 +44,83 @@ if [ "$SSM_LOADED" = "false" ]; then
         if [ -f /var/www/html/.env.prod ]; then
             echo "==> [Config] Usando .env.prod local como .env de runtime."
             cp /var/www/html/.env.prod /var/www/html/.env
+        elif [ -f /var/www/html/.env.prod.example ]; then
+            echo "==> [Config] Usando .env.prod.example como plantilla de producción..."
+            cp /var/www/html/.env.prod.example /var/www/html/.env
         elif [ -f /var/www/html/.env.example ]; then
-            echo "==> [Config] Advertencia: .env.prod no encontrado. Copiando .env.example..."
+            echo "==> [Config] Copiando .env.example..."
             cp /var/www/html/.env.example /var/www/html/.env
-            php artisan key:generate --force || true
         fi
     fi
 fi
 
-# 4. Enlace simbólico de storage público
+# 4. Sincronizar credenciales de entorno en .env si existe
+if [ -f /var/www/html/.env ]; then
+    if [ -n "$DB_HOST" ]; then
+        sed -i "s|^DB_HOST=.*|DB_HOST=${DB_HOST}|" /var/www/html/.env 2>/dev/null || true
+    fi
+    if [ -n "$DB_DATABASE" ]; then
+        sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" /var/www/html/.env 2>/dev/null || true
+    fi
+    if [ -n "$DB_USERNAME" ]; then
+        sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" /var/www/html/.env 2>/dev/null || true
+    fi
+    if [ -n "$DB_PASSWORD" ]; then
+        sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" /var/www/html/.env 2>/dev/null || true
+    fi
+fi
+
+# 5. Enlace simbólico de storage público
 if [ ! -L /var/www/html/public/storage ]; then
     php artisan storage:link --force || true
 fi
 
-# 5. Sincronizar directorio public/ a volumen compartido si existe /shared/public
+# 6. Sincronizar directorio public/ a volumen compartido si existe /shared/public
 if [ -d "/shared/public" ]; then
     cp -ru /var/www/html/public/. /shared/public/ 2>/dev/null || true
 fi
 
-# 6. Generación de APP_KEY si no está configurada
-if [ -f /var/www/html/.env ] && ! grep -q "^APP_KEY=base64:" /var/www/html/.env; then
-    echo "==> [Laravel] Generando APP_KEY requerida..."
-    php artisan key:generate --force || true
+# 7. Manejo seguro de APP_KEY
+if [ -n "$APP_KEY" ]; then
+    echo "==> [Laravel] APP_KEY detectada en variables de entorno."
+    if [ -f /var/www/html/.env ]; then
+        if grep -q "^APP_KEY=" /var/www/html/.env; then
+            sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" /var/www/html/.env 2>/dev/null || true
+        else
+            echo "APP_KEY=${APP_KEY}" >> /var/www/html/.env
+        fi
+    fi
+else
+    if [ -f /var/www/html/.env ] && ! grep -q "^APP_KEY=base64:" /var/www/html/.env; then
+        echo "==> [Laravel] Generando APP_KEY requerida..."
+        php artisan key:generate --force || true
+    fi
 fi
 
-# 7. Optimización de cachés de Laravel en producción (D3-04)
-# Solo si existe APP_KEY y la base de datos o configuración están listas
-if [ -f /var/www/html/.env ] && grep -q "^APP_KEY=base64:" /var/www/html/.env; then
+# 8. Optimización de cachés de Laravel en producción (D3-04)
+if [ -n "$APP_KEY" ] || grep -q "^APP_KEY=base64:" /var/www/html/.env 2>/dev/null; then
     echo "==> [Laravel] Optimizando cachés (config, route, view)..."
     php artisan config:cache || true
     php artisan route:cache || true
     php artisan view:cache || true
 fi
 
-# 8. Migraciones automáticas en MariaDB para el servicio web
+# 9. Migraciones automáticas en MariaDB para el servicio web
 if [ "$1" = "php-fpm" ]; then
+    echo "==> [Laravel] Esperando a que MariaDB esté disponible para migraciones..."
+    max_tries=10
+    tries=0
+    while ! php artisan db:monitor >/dev/null 2>&1; do
+        tries=$((tries + 1))
+        if [ $tries -ge $max_tries ]; then
+            echo "==> [Laravel] Aviso: Tiempo de espera agotado. Procediendo con migrate..."
+            break
+        fi
+        sleep 2
+    done
     echo "==> [Laravel] Ejecutando migraciones automáticas de base de datos..."
     php artisan migrate --force || true
 fi
 
-echo "==> [Entrypoint Producción] Listo. Ejecutando comando principal: $@"
+echo "==> [Entrypoint Producción] Listo. Arrancando servidor principal: $@"
 exec "$@"
