@@ -21,4 +21,4 @@ RUN chmod +x /docker-entrypoint.d/10-ssl-setup.sh
 # Filtrar para que envsubst solo reemplace DOMAIN (evita corromper $host, $uri, etc.)
 ENV NGINX_ENVSUBST_FILTER="DOMAIN"
 
-EXPOSE 80 443
+EXPOSE 80
