@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\EgresoController;
 use App\Http\Controllers\IngresoController;
+use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
@@ -98,6 +99,10 @@ Route::middleware(['auth', 'activo', 'password.cambiado', 'prevent.back'])->grou
     Route::get('/reportes/caja', [ReporteController::class, 'caja'])->name('reportes.caja');
     Route::get('/reportes/caja/pdf', [ReporteController::class, 'pdf'])->name('reportes.caja.pdf');
     Route::get('/reportes/caja/xlsx', [ReporteController::class, 'xlsx'])->name('reportes.caja.xlsx');
+
+    // Inventario Institucional (RF-09 · P17)
+    Route::patch('/inventario/{inventario}/estado', [InventarioController::class, 'cambiarEstado'])->name('inventario.estado');
+    Route::resource('inventario', InventarioController::class)->except(['show']);
 });
 
 require __DIR__.'/auth.php';

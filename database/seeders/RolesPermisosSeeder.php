@@ -41,6 +41,11 @@ class RolesPermisosSeeder extends Seeder
             'reportes.ver',
             'reportes.exportar',
             'bitacora.ver',
+            'inventario.ver',
+            'inventario.crear',
+            'inventario.editar',
+            'inventario.eliminar',
+            'inventario.cambiar_estado',
         ];
 
         foreach ($permisos as $permiso) {
@@ -70,6 +75,11 @@ class RolesPermisosSeeder extends Seeder
             'cortes.solicitar',
             'reportes.ver',
             'reportes.exportar',
+            'inventario.ver',
+            'inventario.crear',
+            'inventario.editar',
+            'inventario.eliminar',
+            'inventario.cambiar_estado',
         ]);
 
         // Limpiar caché al finalizar

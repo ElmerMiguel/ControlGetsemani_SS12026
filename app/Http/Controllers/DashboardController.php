@@ -7,7 +7,9 @@ use App\Models\Caja;
 use App\Models\CorteCaja;
 use App\Models\Egreso;
 use App\Models\Ingreso;
+use App\Models\Inventario;
 use App\Services\CajaService;
+use App\Services\InventarioService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,7 +18,7 @@ class DashboardController extends Controller
     /**
      * Muestra la pantalla principal del panel de control con métricas en tiempo real.
      */
-    public function index(Request $request, CajaService $cajaService): View
+    public function index(Request $request, CajaService $cajaService, InventarioService $inventarioService): View
     {
         $user = $request->user();
         $esAdmin = $user->hasRole('admin');
@@ -109,6 +111,9 @@ class DashboardController extends Controller
                 ->take(10)
                 ->values();
 
+            // Resumen de inventario institucional
+            $resumenInventario = $inventarioService->resumenPorEstado($user);
+
             return view('dashboard', compact(
                 'user',
                 'esAdmin',
@@ -119,7 +124,8 @@ class DashboardController extends Controller
                 'saldosPorDepto',
                 'chartData',
                 'ultimosMovimientos',
-                'anioActual'
+                'anioActual',
+                'resumenInventario'
             ));
         }
 

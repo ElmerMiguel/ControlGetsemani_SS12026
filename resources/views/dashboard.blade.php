@@ -87,6 +87,39 @@
                 </a>
             </div>
 
+            <!-- Resumen de Inventario Institucional (RF-09 · P17) -->
+            @if(isset($resumenInventario))
+                <x-ui.card>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Estado del Inventario Institucional</h2>
+                            <p class="text-xs text-slate-500">Bienes y activos registrados en todos los departamentos.</p>
+                        </div>
+                        <x-ui.button href="{{ route('inventario.index') }}" variant="secondary" size="sm">
+                            Ver Inventario Completo
+                        </x-ui.button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-center">
+                        <div class="p-3 bg-slate-50 rounded-lg">
+                            <span class="text-xs font-medium text-slate-500 block">Total Activos</span>
+                            <span class="text-xl font-bold text-slate-900">{{ $resumenInventario['total'] }}</span>
+                        </div>
+                        <div class="p-3 bg-emerald-50 rounded-lg">
+                            <span class="text-xs font-medium text-emerald-700 block">En Buen Estado</span>
+                            <span class="text-xl font-bold text-emerald-700">{{ $resumenInventario['correcto'] }}</span>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg">
+                            <span class="text-xs font-medium text-amber-700 block">Dañados</span>
+                            <span class="text-xl font-bold text-amber-700">{{ $resumenInventario['danado'] }}</span>
+                        </div>
+                        <div class="p-3 bg-rose-50 rounded-lg">
+                            <span class="text-xs font-medium text-rose-700 block">Perdidos / Baja</span>
+                            <span class="text-xl font-bold text-rose-700">{{ $resumenInventario['perdido'] }}</span>
+                        </div>
+                    </div>
+                </x-ui.card>
+            @endif
+
             <!-- Gráfica Mensual Global de Toda la Iglesia -->
             <x-ui.card>
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-2">
