@@ -1,0 +1,34 @@
+# ==============================================================================
+# terraform.tfvars.example — Ejemplo de Configuración de Variables
+#
+# INSTRUCCIONES:
+# 1. Copia este archivo como 'terraform.tfvars' (protegido por .gitignore).
+# 2. Reemplaza los valores de ejemplo con tus datos reales de entorno.
+# 3. NUNCA subas 'terraform.tfvars' a ningún commit de Git.
+# ==============================================================================
+
+# Región geográfica de AWS (ej. us-east-1 Norte de Virginia o us-west-2 Oregón)
+aws_region = "us-east-1"
+
+# Ambiente de despliegue
+environment = "production"
+
+# Red virtual principal (VPC)
+vpc_cidr           = "10.0.0.0/16"
+public_subnet_cidr = "10.0.1.0/24"
+
+# Tipo de instancia EC2 (t3.micro elegible para capa gratuita / crédito de estudiantes)
+instance_type = "t3.micro"
+
+# IMPORTANTE: Reemplaza con tu IP pública real para restringir el acceso SSH (puerto 22).
+# Puedes consultar tu IP actual ejecutando: curl https://checkip.amazonaws.com
+ip_administrador = "190.104.120.15/32"
+
+# Nombre del Key Pair SSH creado previamente en tu consola de AWS
+ssh_key_name = "getsemani-deploy-key"
+
+# Repositorio de GitHub para autorización OIDC (Usuario/NombreRepo)
+github_repo = "ElmerMiguel/ControlGetsemani_SS12026"
+
+# Dominio público para emisión de certificado SSL y acceso de usuarios
+domain_name = "finanzas.getsemani.gt"
