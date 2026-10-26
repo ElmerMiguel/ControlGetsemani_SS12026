@@ -176,6 +176,10 @@ class MovimientoService
             $movimiento->save();
 
             $movimiento->delete();
+
+            if ($movimiento instanceof Ingreso && $movimiento->comprobante) {
+                app(ComprobanteService::class)->regenerarPdf($movimiento->comprobante);
+            }
         });
     }
 

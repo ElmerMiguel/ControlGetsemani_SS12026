@@ -18,6 +18,7 @@ class AportanteFactory extends Factory
             'nombre_completo' => fake()->name(),
             'cui_dpi' => (string) fake()->unique()->numerify('#############'),
             'telefono' => fake()->numerify('########'),
+            'correo' => fake()->safeEmail(),
             'activo' => true,
         ];
     }

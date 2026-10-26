@@ -26,10 +26,10 @@ class RbacTest extends TestCase
         $adminRole = Role::findByName('admin');
         $tesoreroRole = Role::findByName('tesorero');
 
-        // Admin debe tener todos los 21 permisos
-        $this->assertCount(21, $adminRole->permissions);
+        // Admin debe tener todos los permisos registrados (21 base + 5 inventario)
+        $this->assertCount(26, $adminRole->permissions);
 
-        // Tesorero debe tener exactamente los 13 permisos operativos
+        // Tesorero debe tener exactamente los 18 permisos operativos (13 base + 5 inventario)
         $permisosTesorero = [
             'catalogos.ver',
             'aportantes.gestionar',
@@ -44,9 +44,14 @@ class RbacTest extends TestCase
             'cortes.solicitar',
             'reportes.ver',
             'reportes.exportar',
+            'inventario.ver',
+            'inventario.crear',
+            'inventario.editar',
+            'inventario.eliminar',
+            'inventario.cambiar_estado',
         ];
 
-        $this->assertCount(13, $tesoreroRole->permissions);
+        $this->assertCount(18, $tesoreroRole->permissions);
         foreach ($permisosTesorero as $permiso) {
             $this->assertTrue($tesoreroRole->hasPermissionTo($permiso));
         }

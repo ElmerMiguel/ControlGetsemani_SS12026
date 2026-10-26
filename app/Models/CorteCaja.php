@@ -46,6 +46,15 @@ class CorteCaja extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (CorteCaja $corte) {
+            if (empty($corte->solicitado_at)) {
+                $corte->solicitado_at = now();
+            }
+        });
+    }
+
     public function caja(): BelongsTo
     {
         return $this->belongsTo(Caja::class, 'caja_id');

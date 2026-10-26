@@ -44,6 +44,17 @@
                     </div>
                 </div>
 
+                <div>
+                    <x-form.input
+                        label="Correo Electrónico (Opcional)"
+                        name="correo"
+                        type="email"
+                        placeholder="Ej. hermano@correo.com"
+                        maxlength="255"
+                    />
+                    <p class="mt-1 text-xs text-slate-500">Permite enviar comprobantes de donación en PDF directamente por correo.</p>
+                </div>
+
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                     <x-ui.button href="{{ route('aportantes.index') }}" variant="secondary">
                         Cancelar

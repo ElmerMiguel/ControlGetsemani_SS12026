@@ -17,6 +17,7 @@ class Aportante extends Model
         'nombre_completo',
         'cui_dpi',
         'telefono',
+        'correo',
         'activo',
     ];
 
@@ -30,6 +31,11 @@ class Aportante extends Model
     public function ingresos(): HasMany
     {
         return $this->hasMany(Ingreso::class, 'aportante_id');
+    }
+
+    public function comprobantes(): HasMany
+    {
+        return $this->hasMany(ComprobanteDonacion::class, 'aportante_id');
     }
 
     /**
