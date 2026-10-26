@@ -1,3 +1,20 @@
+# Sistema de Finanzas e Inventario — Iglesia Getsemaní
+
+Sistema web integral para el control de ingresos, egresos, saldos en tiempo real, inventario institucional, comprobantes de donación en PDF y consolidación de informes de asamblea. Desarrollado con Laravel 12, PHP 8.2, MariaDB y Docker.
+
+---
+
+## Despliegue Continuo (CI/CD)
+
+El proyecto cuenta con un flujo automatizado de entrega y despliegue continuo mediante **GitHub Actions** (`.github/workflows/deploy.yml`), el cual se activa exclusivamente ante eventos `push` sobre la rama `main` (tras la revisión y fusión de un Pull Request):
+
+1. **Job `test` (Calidad y Verificación):** Ejecuta el linter estricto de Laravel (`Pint`), compila los activos de frontend con Vite, aplica migraciones sobre una base de datos MySQL 8.0 aislada y ejecuta la suite completa de 166 pruebas automatizadas (PHPUnit). Si ocurre cualquier falla, el pipeline se aborta inmediatamente.
+2. **Job `build` (Construcción Docker):** Valida la construcción de la imagen de producción multi-stage (`docker/app/Dockerfile`) garantizando que no se incluyan dependencias de desarrollo ni `node_modules`.
+3. **Job `deploy` (Despliegue y Migraciones):** Se conecta vía SSH seguro al servidor VPS/instancia de producción, actualiza el repositorio (`git reset --hard origin/main`), reconstruye los contenedores en segundo plano (`docker compose -f docker-compose.prod.yml up -d --build`), corre las migraciones con `--force` y optimiza las cachés de configuración, rutas y vistas.
+4. **Verificación de Salud (`Healthcheck`):** Realiza un sondeo automático contra `https://<dominio>/up` esperando un código de respuesta HTTP `200 OK`. Si el servidor no responde saludablemente, el job finaliza en estado fallido para alertar al equipo.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
