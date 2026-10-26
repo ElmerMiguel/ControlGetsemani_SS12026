@@ -62,13 +62,25 @@ if [ -d "/shared/public" ]; then
     cp -ru /var/www/html/public/. /shared/public/ 2>/dev/null || true
 fi
 
-# 6. Optimización de cachés de Laravel en producción (D3-04)
+# 6. Generación de APP_KEY si no está configurada
+if [ -f /var/www/html/.env ] && ! grep -q "^APP_KEY=base64:" /var/www/html/.env; then
+    echo "==> [Laravel] Generando APP_KEY requerida..."
+    php artisan key:generate --force || true
+fi
+
+# 7. Optimización de cachés de Laravel en producción (D3-04)
 # Solo si existe APP_KEY y la base de datos o configuración están listas
 if [ -f /var/www/html/.env ] && grep -q "^APP_KEY=base64:" /var/www/html/.env; then
     echo "==> [Laravel] Optimizando cachés (config, route, view)..."
     php artisan config:cache || true
     php artisan route:cache || true
     php artisan view:cache || true
+fi
+
+# 8. Migraciones automáticas en MariaDB para el servicio web
+if [ "$1" = "php-fpm" ]; then
+    echo "==> [Laravel] Ejecutando migraciones automáticas de base de datos..."
+    php artisan migrate --force || true
 fi
 
 echo "==> [Entrypoint Producción] Listo. Ejecutando comando principal: $@"

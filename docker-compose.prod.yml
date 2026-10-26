@@ -1,6 +1,6 @@
 # ==============================================================================
 # Docker Compose de Producción — Sistema de Finanzas e Inventario Iglesia Getsemaní
-# Reglas: ARQUITECTURA_FASE3.md §6 | Prompt P21
+# Configuración Optimizada para Despliegues en Servidor / Coolify
 # ==============================================================================
 
 services:
@@ -12,11 +12,22 @@ services:
     container_name: getsemani_prod_app
     restart: unless-stopped
     env_file:
+      - path: .env
+        required: false
       - path: .env.prod
         required: false
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-getsemani_prod}
+      - DB_USERNAME=${DB_USERNAME:-getsemani_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secreto_prod}
+      - CACHE_STORE=database
+      - SESSION_DRIVER=database
+      - QUEUE_CONNECTION=database
     volumes:
       - storage_data:/var/www/html/storage/app
       - app_public:/var/www/html/public
@@ -39,19 +50,20 @@ services:
     image: getsemani-nginx:prod
     container_name: getsemani_prod_nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+    expose:
+      - "80"
     environment:
-      DOMAIN: ${DOMAIN:-localhost}
-      REDIRECT_TO_HTTPS: ${REDIRECT_TO_HTTPS:-false}
+      DOMAIN: ${DOMAIN:-controlgetse.12345611.xyz}
+      REDIRECT_TO_HTTPS: "false"
     volumes:
       - app_public:/var/www/html/public:ro
-      - certbot_etc:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
     depends_on:
       app:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.getsemani.rule=Host(`${DOMAIN:-controlgetse.12345611.xyz}`)"
+      - "traefik.http.services.getsemani.loadbalancer.server.port=80"
     networks:
       - getsemani_prod_net
 
@@ -85,10 +97,21 @@ services:
     restart: unless-stopped
     command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=3", "--timeout=90"]
     env_file:
+      - path: .env
+        required: false
       - path: .env.prod
         required: false
     environment:
       - APP_ENV=production
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-getsemani_prod}
+      - DB_USERNAME=${DB_USERNAME:-getsemani_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secreto_prod}
+      - CACHE_STORE=database
+      - SESSION_DRIVER=database
+      - QUEUE_CONNECTION=database
     volumes:
       - storage_data:/var/www/html/storage/app
     depends_on:
@@ -99,30 +122,12 @@ services:
     networks:
       - getsemani_prod_net
 
-  certbot:
-    image: certbot/certbot:latest
-    container_name: getsemani_prod_certbot
-    restart: unless-stopped
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;'"
-    volumes:
-      - certbot_etc:/etc/letsencrypt
-      - certbot_var:/var/lib/letsencrypt
-      - certbot_www:/var/www/certbot
-    networks:
-      - getsemani_prod_net
-
 volumes:
   mariadb_data:
     driver: local
   storage_data:
     driver: local
   app_public:
-    driver: local
-  certbot_etc:
-    driver: local
-  certbot_var:
-    driver: local
-  certbot_www:
     driver: local
 
 networks:
