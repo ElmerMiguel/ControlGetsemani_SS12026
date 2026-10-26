@@ -1,0 +1,130 @@
+# ==============================================================================
+# Docker Compose de Producción — Sistema de Finanzas e Inventario Iglesia Getsemaní
+# Reglas: ARQUITECTURA_FASE3.md §6 | Prompt P21
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: getsemani-app:prod
+    container_name: getsemani_prod_app
+    restart: unless-stopped
+    env_file:
+      - path: .env.prod
+        required: false
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    volumes:
+      - storage_data:/var/www/html/storage/app
+      - app_public:/var/www/html/public
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan --version || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - getsemani_prod_net
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: getsemani-nginx:prod
+    container_name: getsemani_prod_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      REDIRECT_TO_HTTPS: ${REDIRECT_TO_HTTPS:-false}
+    volumes:
+      - app_public:/var/www/html/public:ro
+      - certbot_etc:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - getsemani_prod_net
+
+  mariadb:
+    image: mariadb:11.4
+    container_name: getsemani_prod_mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-getsemani_prod}
+      MYSQL_USER: ${DB_USERNAME:-getsemani_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secreto_prod}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secreto_prod}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized || mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - getsemani_prod_net
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: getsemani-app:prod
+    container_name: getsemani_prod_worker
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=3", "--timeout=90"]
+    env_file:
+      - path: .env.prod
+        required: false
+    environment:
+      - APP_ENV=production
+    volumes:
+      - storage_data:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    networks:
+      - getsemani_prod_net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: getsemani_prod_certbot
+    restart: unless-stopped
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;'"
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/lib/letsencrypt
+      - certbot_www:/var/www/certbot
+    networks:
+      - getsemani_prod_net
+
+volumes:
+  mariadb_data:
+    driver: local
+  storage_data:
+    driver: local
+  app_public:
+    driver: local
+  certbot_etc:
+    driver: local
+  certbot_var:
+    driver: local
+  certbot_www:
+    driver: local
+
+networks:
+  getsemani_prod_net:
+    driver: bridge
