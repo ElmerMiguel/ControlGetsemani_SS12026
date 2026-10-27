@@ -52,8 +52,18 @@ if [ "$SSM_LOADED" = "false" ]; then
     fi
 fi
 
-# 4. Sincronizar credenciales de entorno en .env si existe
+# 4. Sincronizar credenciales y URLs de entorno en .env si existe
 if [ -f /var/www/html/.env ]; then
+    if [ -n "$APP_URL" ]; then
+        sed -i "s|^APP_URL=.*|APP_URL=${APP_URL}|" /var/www/html/.env 2>/dev/null || true
+    fi
+    if [ -n "$ASSET_URL" ]; then
+        if grep -q "^ASSET_URL=" /var/www/html/.env; then
+            sed -i "s|^ASSET_URL=.*|ASSET_URL=${ASSET_URL}|" /var/www/html/.env 2>/dev/null || true
+        else
+            echo "ASSET_URL=${ASSET_URL}" >> /var/www/html/.env
+        fi
+    fi
     if [ -n "$DB_HOST" ]; then
         sed -i "s|^DB_HOST=.*|DB_HOST=${DB_HOST}|" /var/www/html/.env 2>/dev/null || true
     fi
@@ -76,16 +86,12 @@ fi
 # 6. Manejo seguro y validado de APP_KEY (evita Unsupported cipher)
 if [ -f /var/www/html/.env ]; then
     CURRENT_KEY=$(grep "^APP_KEY=" /var/www/html/.env | cut -d '=' -f2- | tr -d ' "\r\n' || true)
-    # Si la clave no empieza con base64: o está vacía o es de longitud incorrecta, regenerar
-    case "$CURRENT_KEY" in
-        base64:*)
-            echo "==> [Laravel] APP_KEY válida detectada (base64)."
-            ;;
-        *)
-            echo "==> [Laravel] APP_KEY no válida o ausente. Generando clave criptográfica segura..."
-            php artisan key:generate --force || true
-            ;;
-    esac
+    if [ -z "$CURRENT_KEY" ] || echo "$CURRENT_KEY" | grep -q "CAMBIAR" || ! echo "$CURRENT_KEY" | grep -q "^base64:"; then
+        echo "==> [Laravel] APP_KEY no válida o ausente. Generando clave criptográfica segura..."
+        php artisan key:generate --force || true
+    else
+        echo "==> [Laravel] APP_KEY válida detectada (base64)."
+    fi
 fi
 
 # 7. Optimización de cachés de Laravel en producción (D3-04)

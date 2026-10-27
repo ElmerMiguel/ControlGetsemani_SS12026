@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -51,6 +52,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Forzar HTTPS en producción para evitar bloqueo por contenido mixto en proxy inverso (D3-07 / Regla 10.2 #7)
+        if ($this->app->isProduction() || str_starts_with(config('app.url', ''), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         // Prohíbe comandos destructivos de base de datos (como migrate:fresh o db:wipe) en producción.
         DB::prohibitDestructiveCommands($this->app->isProduction());
 
