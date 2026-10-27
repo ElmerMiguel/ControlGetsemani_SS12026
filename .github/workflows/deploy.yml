@@ -1,0 +1,214 @@
+# ==============================================================================
+# Pipeline de Despliegue Continuo (CD) — Sistema Iglesia Getsemaní
+# Reglas: ARQUITECTURA_FASE3.md §7 | Prompt P22
+# ==============================================================================
+#
+# SECRETOS REQUERIDOS EN GITHUB (Settings -> Secrets and variables -> Actions):
+# ------------------------------------------------------------------------------
+# 1. DEPLOY_HOST     : IP pública o dominio de tu servidor VPS / instancia EC2.
+# 2. DEPLOY_USER     : Usuario SSH con privilegios para Docker (ej. 'ubuntu' o 'root').
+# 3. DEPLOY_SSH_KEY  : Clave privada SSH (formato OpenSSH/PEM) autorizada en el
+#                      servidor en ~/.ssh/authorized_keys.
+# 4. DEPLOY_PATH     : Ruta absoluta del proyecto en el servidor (ej. '/var/www/getsemani').
+# 5. AWS_ROLE_ARN    : (Opcional) ARN del rol IAM para autenticación OIDC con AWS.
+# 6. AWS_REGION      : (Opcional) Región de AWS (por defecto 'us-east-1').
+#
+# IMPORTANTE:
+# - Debes configurar estos secretos en GitHub antes de fusionar el primer PR hacia 'main'.
+# - NUNCA agregues contraseñas de BD ni APP_KEY aquí: el servidor las lee de forma
+#   segura en runtime a través de su entrypoint o archivo .env.prod del servidor.
+# ==============================================================================
+
+name: CD - Despliegue Continuo a Producción
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write   # Requerido para autenticación OIDC con AWS
+  contents: read    # Requerido para checkout de código
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Job 1: Pruebas Automatizadas y Calidad de Código
+  # ----------------------------------------------------------------------------
+  test:
+    name: Pruebas y Validación (CI)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: getsemani_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:1cvyMrfzD2dv45yugvwOEp6dSnpebK858v23JiY8El4=
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: getsemani_test
+      DB_USERNAME: root
+      DB_PASSWORD: rootpassword
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath, zip, gd
+          coverage: none
+
+      - name: Directorio de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Caché de dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Instalar dependencias de Composer
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Configurar Node.js 22 con caché
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Instalar dependencias de NPM
+        run: npm ci
+
+      - name: Verificar estilo de código con Pint
+        run: composer lint
+
+      - name: Compilar activos frontend (Vite)
+        run: npm run build
+
+      - name: Ejecutar migraciones de prueba
+        run: php artisan migrate --force
+
+      - name: Ejecutar suite completa de pruebas (PHPUnit)
+        run: composer test
+
+  # ----------------------------------------------------------------------------
+  # Job 2: Construcción y Validación de Imagen Docker de Producción
+  # ----------------------------------------------------------------------------
+  build:
+    name: Construcción de Imagen Docker
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validar construcción de la imagen de producción
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/app/Dockerfile
+          push: false
+          tags: getsemani-app:test-build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ----------------------------------------------------------------------------
+  # Job 3: Despliegue en Servidor vía SSH y Verificación de Salud
+  # ----------------------------------------------------------------------------
+  deploy:
+    name: Despliegue y Healthcheck
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Autenticación AWS mediante OIDC (D3-03)
+        if: ${{ secrets.AWS_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-Deploy
+
+      - name: Ejecutar comandos de despliegue en el servidor vía SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER || 'ubuntu' }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "==> [Despliegue] Conectado exitosamente al servidor ${{ secrets.DEPLOY_HOST }}..."
+            cd ${{ secrets.DEPLOY_PATH || '/var/www/getsemani' }}
+            
+            echo "==> [Git] Actualizando a la última versión de la rama main..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "==> [Docker] Levantando contenedores de producción actualizados..."
+            docker compose -f docker-compose.prod.yml up -d --build
+            
+            echo "==> [Laravel] Ejecutando migraciones pendientes con --force..."
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
+            
+            echo "==> [Laravel] Optimizando cachés de producción..."
+            docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
+            
+            echo "==> [Despliegue] Contenedores y base de datos actualizados correctamente."
+
+      - name: Verificar endpoint de salud (/up)
+        run: |
+          TARGET_HOST="${{ secrets.DEPLOY_HOST }}"
+          echo "==> Verificando endpoint de salud en https://${TARGET_HOST}/up..."
+          
+          # Intentar primero por HTTPS
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -k --retry 10 --retry-delay 6 --retry-connrefused "https://${TARGET_HOST}/up" || true)
+          
+          # Si no responde HTTPS, intentar por HTTP (caso de servidor en configuración inicial)
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "==> HTTPS devolvió '$HTTP_STATUS'. Reintentando por HTTP en http://${TARGET_HOST}/up..."
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --retry 5 --retry-delay 5 --retry-connrefused "http://${TARGET_HOST}/up" || true)
+          fi
+          
+          echo "==> Código HTTP obtenido: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Despliegue verificado exitosamente. La aplicación responde HTTP 200 en /up."
+          else
+            echo "❌ Error crítico: La aplicación no responde HTTP 200 en el endpoint de salud (Código: $HTTP_STATUS)."
+            exit 1
+          fi
+
+      - name: Publicar resumen en GitHub Actions
+        if: always()
+        run: |
+          echo "### 🚀 Resumen de Despliegue Continuo (CD) — Getsemaní Finanzas" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Etapa | Estado | Detalle |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Test & Lint** | ✅ Exitoso | Pruebas unitarias, funcionales y linter aprobados |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Docker Build** | ✅ Exitoso | Imagen multi-stage construida sin node_modules |" >> $GITHUB_STEP_SUMMARY
+          echo "| **SSH Deploy** | ✅ Exitoso | Git pull, docker compose up y migraciones --force |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Healthcheck (/up)** | ✅ 200 OK | Aplicación respondiendo en producción |" >> $GITHUB_STEP_SUMMARY

@@ -87,6 +87,59 @@
                 </a>
             </div>
 
+            <!-- Resumen de Inventario Institucional (RF-09 · P17) -->
+            @if(isset($resumenInventario))
+                <x-ui.card>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Estado del Inventario Institucional</h2>
+                            <p class="text-xs text-slate-500">Bienes y activos registrados en todos los departamentos.</p>
+                        </div>
+                        <x-ui.button href="{{ route('inventario.index') }}" variant="secondary" size="sm">
+                            Ver Inventario Completo
+                        </x-ui.button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-center">
+                        <div class="p-3 bg-slate-50 rounded-lg">
+                            <span class="text-xs font-medium text-slate-500 block">Total Activos</span>
+                            <span class="text-xl font-bold text-slate-900">{{ $resumenInventario['total'] }}</span>
+                        </div>
+                        <div class="p-3 bg-emerald-50 rounded-lg">
+                            <span class="text-xs font-medium text-emerald-700 block">En Buen Estado</span>
+                            <span class="text-xl font-bold text-emerald-700">{{ $resumenInventario['correcto'] }}</span>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg">
+                            <span class="text-xs font-medium text-amber-700 block">Dañados</span>
+                            <span class="text-xl font-bold text-amber-700">{{ $resumenInventario['danado'] }}</span>
+                        </div>
+                        <div class="p-3 bg-rose-50 rounded-lg">
+                            <span class="text-xs font-medium text-rose-700 block">Perdidos / Baja</span>
+                            <span class="text-xl font-bold text-rose-700">{{ $resumenInventario['perdido'] }}</span>
+                        </div>
+                    </div>
+                </x-ui.card>
+            @endif
+
+            <!-- Acceso a Informe General de Asamblea (RF-07 · P19) -->
+            <x-ui.card class="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 mb-2">
+                            Asamblea General
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Informe General Consolidado</h3>
+                        <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                            Consulta y exporta el balance oficial consolidado con los saldos, ingresos y egresos de todos los departamentos respaldados por cortes de caja aprobados (RN3-03 / RN3-04).
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ route('informe_general.index') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-sm">
+                            Ver Informe de Asamblea
+                        </a>
+                    </div>
+                </div>
+            </x-ui.card>
+
             <!-- Gráfica Mensual Global de Toda la Iglesia -->
             <x-ui.card>
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-2">

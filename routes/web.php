@@ -7,11 +7,14 @@ use App\Http\Controllers\CajaActivaController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CatalogoEgresoController;
 use App\Http\Controllers\CatalogoIngresoController;
+use App\Http\Controllers\ComprobanteDonacionController;
 use App\Http\Controllers\CorteCajaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\EgresoController;
+use App\Http\Controllers\InformeGeneralController;
 use App\Http\Controllers\IngresoController;
+use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
@@ -22,7 +25,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
+Route::middleware(['auth', 'activo', 'password.cambiado', 'prevent.back'])->group(function () {
     // Cambio forzado de contraseña temporal
     Route::get('/cambiar-password', [CambiarPasswordController::class, 'show'])->name('password.cambiar');
     Route::post('/cambiar-password', [CambiarPasswordController::class, 'update'])->name('password.cambiar.update');
@@ -72,6 +75,9 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
 
     // Ingresos Contables (RN-01..RN-07)
     Route::post('/ingresos/{ingreso}/anular', [IngresoController::class, 'anular'])->name('ingresos.anular');
+    Route::post('/ingresos/{ingreso}/comprobante', [ComprobanteDonacionController::class, 'generar'])->name('ingresos.comprobante.generar');
+    Route::get('/comprobantes/{comprobante}/descargar', [ComprobanteDonacionController::class, 'descargar'])->name('comprobantes.descargar');
+    Route::post('/comprobantes/{comprobante}/enviar', [ComprobanteDonacionController::class, 'enviar'])->name('comprobantes.enviar');
     Route::resource('ingresos', IngresoController::class)->except(['show', 'destroy']);
 
     // Egresos Contables (RN-01..RN-07, RN-10)
@@ -98,6 +104,15 @@ Route::middleware(['auth', 'activo', 'password.cambiado'])->group(function () {
     Route::get('/reportes/caja', [ReporteController::class, 'caja'])->name('reportes.caja');
     Route::get('/reportes/caja/pdf', [ReporteController::class, 'pdf'])->name('reportes.caja.pdf');
     Route::get('/reportes/caja/xlsx', [ReporteController::class, 'xlsx'])->name('reportes.caja.xlsx');
+
+    // Inventario Institucional (RF-09 · P17)
+    Route::patch('/inventario/{inventario}/estado', [InventarioController::class, 'cambiarEstado'])->name('inventario.estado');
+    Route::resource('inventario', InventarioController::class)->except(['show']);
+
+    // Informe General de Asamblea (RF-07, RN3-03, RN3-04 · P19)
+    Route::get('/informe-general', [InformeGeneralController::class, 'index'])->name('informe_general.index');
+    Route::get('/informe-general/pdf', [InformeGeneralController::class, 'pdf'])->name('informe_general.pdf');
+    Route::get('/informe-general/xlsx', [InformeGeneralController::class, 'xlsx'])->name('informe_general.xlsx');
 });
 
 require __DIR__.'/auth.php';

@@ -1,0 +1,116 @@
+# ==============================================================================
+# Docker Compose de Producción — Sistema de Finanzas e Inventario Iglesia Getsemaní
+# Arquitectura Simplificada Apache + MariaDB (Ideal para Coolify / VPS)
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: getsemani-app:prod
+    container_name: getsemani_prod_app
+    restart: unless-stopped
+    ports:
+      - "80"
+    expose:
+      - "80"
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.prod
+        required: false
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=${APP_URL:-https://controlgetse.12345611.xyz}
+      - ASSET_URL=${ASSET_URL:-https://controlgetse.12345611.xyz}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-getsemani_prod}
+      - DB_USERNAME=${DB_USERNAME:-getsemani_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secreto_prod}
+      - CACHE_STORE=database
+      - SESSION_DRIVER=database
+      - QUEUE_CONNECTION=database
+    volumes:
+      - storage_data:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/up || php artisan --version || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    networks:
+      - getsemani_prod_net
+
+  mariadb:
+    image: mariadb:11.4
+    container_name: getsemani_prod_mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-getsemani_prod}
+      MYSQL_USER: ${DB_USERNAME:-getsemani_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secreto_prod}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secreto_prod}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized || mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - getsemani_prod_net
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: getsemani-app:prod
+    container_name: getsemani_prod_worker
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=3", "--timeout=90"]
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.prod
+        required: false
+    environment:
+      - APP_ENV=production
+      - APP_URL=${APP_URL:-https://controlgetse.12345611.xyz}
+      - ASSET_URL=${ASSET_URL:-https://controlgetse.12345611.xyz}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-getsemani_prod}
+      - DB_USERNAME=${DB_USERNAME:-getsemani_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secreto_prod}
+      - CACHE_STORE=database
+      - SESSION_DRIVER=database
+      - QUEUE_CONNECTION=database
+    volumes:
+      - storage_data:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    networks:
+      - getsemani_prod_net
+
+volumes:
+  mariadb_data:
+    driver: local
+  storage_data:
+    driver: local
+
+networks:
+  getsemani_prod_net:
+    driver: bridge

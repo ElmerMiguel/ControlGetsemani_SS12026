@@ -27,6 +27,7 @@ class UpdateAportanteRequest extends FormRequest
                 Rule::unique('aportantes', 'cui_dpi')->ignore($aportanteId),
             ],
             'telefono' => ['nullable', 'string', 'max:20'],
+            'correo' => ['nullable', 'email', 'max:255'],
         ];
     }
 

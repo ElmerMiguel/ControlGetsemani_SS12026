@@ -17,6 +17,7 @@ class StoreAportanteRequest extends FormRequest
             'nombre_completo' => ['required', 'string', 'max:150'],
             'cui_dpi' => ['nullable', 'string', 'digits:13', 'unique:aportantes,cui_dpi'],
             'telefono' => ['nullable', 'string', 'max:20'],
+            'correo' => ['nullable', 'email', 'max:255'],
         ];
     }
 

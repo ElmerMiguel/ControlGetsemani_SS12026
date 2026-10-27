@@ -3,16 +3,19 @@
 node_modules
 npm-debug.log
 .phpunit.result.cache
-storage/logs/*.log
-storage/framework/cache/data/*
-storage/framework/sessions/*
-storage/framework/views/*
+vendor/
+storage/
 
 # Environment files and secrets
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # Database dumps
 *.sql
 *.sql.gz
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate*
